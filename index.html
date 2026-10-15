@@ -71,6 +71,19 @@
   #planWrap{display:block;grid-row:1;grid-column:1;align-self:end;justify-self:start;margin:12px;z-index:6;pointer-events:none}
   #planWrap #plan{pointer-events:auto}
   .seg[style*="none"] + .tog{top:12px}
+  /* planta: miniaturas en la franja inferior, fuera del 3D; en Comparar cada una bajo su vista */
+  #planWrap{display:none}
+  #under{display:flex;flex-wrap:wrap;align-items:center;column-gap:20px;padding:0 18px}
+  #under.on{border-top:1px solid #222;padding:10px 18px}
+  #legend{flex:1 1 300px;min-width:0;border-top:0;padding:0}
+  #legend .bar{max-width:none}
+  .pfig{display:none;margin:0;flex:0 0 auto}
+  .pfig img{display:block;height:92px;width:auto;border-radius:4px;border:1px solid #2a2a2a}
+  .pfig figcaption{font-size:11.5px;color:#bbb;margin-top:4px;font-weight:600}
+  #pR figcaption{text-align:right}
+  #notice{flex:1 0 100%;order:5;margin:8px 0 0}
+  /* controles en gris claro, no azul */
+  input[type=range],input[type=checkbox]{accent-color:#d6d6d6}
   .mtitle{display:none}
 
   /* ---------- CELULAR: diseño propio, nada encima del 3D ---------- */
@@ -106,7 +119,8 @@
     .ind .yr{position:absolute;right:7px;top:8px;float:none;font-size:10px}
 
     #planWrap{order:3;display:block;padding:8px 12px;margin:0;grid-row:auto;align-self:auto;justify-self:auto;pointer-events:auto}
-    #under{border-top:0;background:none}
+    #under,#under.on{border-top:0;background:none;padding:8px 12px 10px}
+    #pL,#pR{display:none!important}
     #notice{margin:8px 0 0}
     #plan{position:static;background:none;border:0;padding:0}
     #plan h4{max-width:none;font-size:13px;margin:4px 0 8px;color:#ddd}
@@ -128,7 +142,7 @@
     #sticky{grid-column:1;grid-row:1 / span 8;height:100vh;height:100svh;display:flex;flex-direction:column;border-bottom:0;border-right:1px solid #222;padding-left:env(safe-area-inset-left);padding-top:0}
     #topbar{padding:6px 10px}
     #stage{flex:1;height:auto;min-height:0}
-    #under{padding:6px 10px 8px}
+    #under,#under.on{padding:6px 10px 8px}
     #list,#planWrap,.row,.ctl{grid-column:2;margin-right:env(safe-area-inset-right)}
     #list{grid-template-columns:1fr;padding-top:10px}
   }
@@ -145,7 +159,7 @@
     <div class="row"><button id="play">▶ Uno por uno</button><button id="axo">Vista axonométrica 35°</button></div>
     <div class="ctl">
       <label>Visualización de los picos</label>
-      <select id="mode"><option value="hair" selected>Peludo (furry)</option><option value="surf">Superficie (malla)</option><option value="both">Superficie + peludo</option></select>
+      <select id="mode"><option value="hair">Peludo (furry)</option><option value="surf" selected>Superficie (malla)</option><option value="both">Superficie + peludo</option></select>
       <label class="chk"><input type="checkbox" id="wind" checked> Viento en el peludo (se mueve)</label>
       <label>Intensidad del viento <span id="vW">1.0</span></label>
       <input id="sW" type="range" min="0" max="2.5" step="0.1" value="1">
@@ -176,7 +190,9 @@
         <div id="loading">Cargando territorio y mallas…</div>
       </div>
       <div id="under">
+        <figure id="pL" class="pfig"></figure>
         <div id="legend"><h3 id="lgTitle"></h3><div class="bar"><canvas id="lgCanvas"></canvas><div class="ticks" id="lgTicks"></div></div></div>
+        <figure id="pR" class="pfig"></figure>
         <div id="notice"></div>
       </div>
     </div>
@@ -289,17 +305,33 @@ function build(i){
   const cu=dec(d.col), col=new Float32Array(n*3); for(let k=0;k<n*3;k++)col[k]=cu[k]/255;
   const qi=new Uint16Array(dec(d.idx).buffer), idx=new Uint32Array(d.nF*6);
   for(let f=0;f<d.nF;f++){const a=qi[f*4],b=qi[f*4+1],c=qi[f*4+2],e=qi[f*4+3];idx.set([a,b,c,a,c,e],f*6);}
+  // faldón: en cada borde abierto de la malla baja una pared hasta el terreno, así la superficie siempre toca el territorio
+  const ec=new Map(), ed=[];
+  const addE=(u,v)=>{ if(u===v)return; const key=u<v?u*65536+v:v*65536+u; const c=ec.get(key); if(c===undefined){ec.set(key,ed.length);ed.push(u,v,1);} else ed[c+2]++; };
+  for(let f=0;f<d.nF;f++){const a=qi[f*4],b=qi[f*4+1],c=qi[f*4+2],e=qi[f*4+3];addE(a,b);addE(b,c);addE(c,e);addE(e,a);}
+  const bmap=new Int32Array(n).fill(-1), bsrc=[], bed=[];
+  for(let j=0;j<ed.length;j+=3){ if(ed[j+2]!==1)continue; const u=ed[j],v=ed[j+1];
+    if(bmap[u]<0){bmap[u]=bsrc.length;bsrc.push(u);} if(bmap[v]<0){bmap[v]=bsrc.length;bsrc.push(v);} bed.push(u,v); }
+  const m=bsrc.length, n2=n+2*m;
+  const posE=new Float32Array(n2*3), zE=new Float32Array(n2), tbE=new Float32Array(n2), colE=new Float32Array(n2*3);
+  posE.set(pos); zE.set(z); tbE.set(tb); colE.set(col);
+  for(let j=0;j<m;j++){ const sIdx=bsrc[j];
+    for(const [dst,dark] of [[n+j,1],[n+m+j,0.35]]){
+      posE[dst*3]=pos[sIdx*3]; posE[dst*3+1]=pos[sIdx*3+1]; zE[dst]=dst<n+m?z[sIdx]:0; tbE[dst]=tb[sIdx];
+      colE[dst*3]=col[sIdx*3]*dark; colE[dst*3+1]=col[sIdx*3+1]*dark; colE[dst*3+2]=col[sIdx*3+2]*dark; } }
+  const idxE=new Uint32Array(idx.length+bed.length/2*6); idxE.set(idx);
+  for(let j=0,o2=idx.length;j<bed.length;j+=2,o2+=6){ const tu=n+bmap[bed[j]],tv=n+bmap[bed[j+1]],bu=tu+m,bv=tv+m; idxE.set([tu,tv,bv,tu,bv,bu],o2); }
   const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  g.setIndex(new THREE.BufferAttribute(idx,1));
+  g.setAttribute('position',new THREE.BufferAttribute(posE,3));
+  g.setIndex(new THREE.BufferAttribute(idxE,1));
   g.computeVertexNormals();
-  const nr=g.attributes.normal.array, sh=new Float32Array(n*3), lx=0.35,ly=0.30,lz=0.88;
-  for(let k=0;k<n;k++){
+  const nr=g.attributes.normal.array, sh=new Float32Array(n2*3), lx=0.35,ly=0.30,lz=0.88;
+  for(let k=0;k<n2;k++){
     let dd=nr[k*3]*lx+nr[k*3+1]*ly+nr[k*3+2]*lz; if(dd<0)dd=-dd*0.4;
     const f=0.80+0.30*Math.min(1,dd);
-    sh[k*3]=Math.min(1,col[k*3]*f); sh[k*3+1]=Math.min(1,col[k*3+1]*f); sh[k*3+2]=Math.min(1,col[k*3+2]*f);
+    sh[k*3]=Math.min(1,colE[k*3]*f); sh[k*3+1]=Math.min(1,colE[k*3+1]*f); sh[k*3+2]=Math.min(1,colE[k*3+2]*f);
   }
-  const live=new Float32Array(document.getElementById('shade').checked?sh:col);
+  const live=new Float32Array(document.getElementById('shade').checked?sh:colE);
   g.setAttribute('color',new THREE.BufferAttribute(live,3));
   const mesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide}));
   mesh.rotation.x=-Math.PI/2; mesh.frustumCulled=false;
@@ -332,7 +364,7 @@ function build(i){
 
   const grp=new THREE.Group(); grp.add(mesh); grp.add(hair); grp.visible=false; scene.add(grp);
   const lab=label(d.name); lab.position.set(-(x1*S)+100,30,(-y0*S)+14); grp.add(lab);
-  Object.assign(o,{group:grp,mesh,hair,wf,label:lab,col:cu,z,zs,tb,raw:col,shd:sh,live,geo:g,
+  Object.assign(o,{group:grp,mesh,hair,wf,label:lab,col:cu,z:zE,zs,tb:tbE,nB:n+m,raw:colE,shd:sh,live,geo:g,
                    hp,hn,hx:Float32Array.from(hx),hy:Float32Array.from(hy),hz:Float32Array.from(hzv),htb:Float32Array.from(htb),
                    hrx:Float32Array.from(hrx),hry:Float32Array.from(hry),hph:Float32Array.from(hph)});
   updateSurface(o);
@@ -346,8 +378,9 @@ function label(text){
   s.scale.set(190,20.8,1);return s;
 }
 function updateSurface(o){            // superficie apoyada en el terreno; crece desde el suelo
-  const p=o.geo.attributes.position.array, sc=hMul*o.t, n=o.z.length;
-  for(let k=0;k<n;k++) p[k*3+2]=o.tb[k]+lift+o.z[k]*o.zs*sc;
+  const p=o.geo.attributes.position.array, sc=hMul*o.t, n=o.z.length, nB=o.nB;
+  for(let k=0;k<nB;k++) p[k*3+2]=o.tb[k]+lift+o.z[k]*o.zs*sc;
+  for(let k=nB;k<n;k++) p[k*3+2]=o.tb[k]-0.3;          // pie del faldón, apenas bajo el terreno
   o.geo.attributes.position.needsUpdate=true;
 }
 function updateHair(o){
@@ -401,23 +434,32 @@ function drawLegend(i){
 }
 function refreshLegend(){
   const lg=document.getElementById('legend');
-  if(stackMode||selected.size===0){lg.style.display='none';legendIdx=-1;return;}
+  if(stackMode||selected.size===0){lg.style.display='none';legendIdx=-1;syncUnder();return;}
   const i=selected.has(lastSel)?lastSel:[...selected][0]; drawLegend(i);
 }
 
 // ---------- vista en planta (la imagen 2D al costado) ----------
 let planOn=!isMobile||PHONE();          // en celular la planta va debajo, sin tapar el 3D
 addEventListener('resize',()=>{ if(legendIdx>=0)drawLegend(legendIdx); if(PHONE()&&!planOn){planOn=true;updatePlan();} });
+function syncUnder(){
+  const u=document.getElementById('under');
+  u.classList.toggle('on',[...u.children].some(c=>c.style.display==='block'));
+}
 function updatePlan(){
-  const el=document.getElementById('plan');
-  if(!planOn||stackMode||selected.size===0){el.style.display='none';return;}
+  const el=document.getElementById('plan'), pL=document.getElementById('pL'), pR=document.getElementById('pR');
+  if(!planOn||stackMode||selected.size===0){el.style.display='none';pL.style.display='none';pR.style.display='none';syncUnder();return;}
   const i=selected.has(lastSel)?lastSel:[...selected][0]; let items;
   if(cmpState) items=[{k:cmpState.left,t:'Antes · 2020'},{k:cmpState.right,t:'Actual'}];
   else { const k=(period==='y2020'&&ind[i].alt!=null)?ind[i].alt:i; items=[{k,t:ind[k].d.year?'Antes · 2020':'Actual'}]; }
+  // celular: bloque bajo la lista
   el.className=cmpState?'cmp':'';
   el.innerHTML='<h4>'+ind[i].d.name.replace(/\s*\([A-Z]+\)\s*$/,'')+' · planta</h4><div class="r2">'+
     items.map(it=>'<figure><img alt="planta" src="'+ind[it.k].d.plan+'"><figcaption>'+it.t+'</figcaption></figure>').join('')+'</div>';
   el.style.display='block';
+  // escritorio: miniatura en la franja inferior; en Comparar, Antes bajo su vista (izq.) y Actual bajo la suya (der.)
+  const fig=(f,it)=>{f.innerHTML='<img alt="Planta '+it.t+'" src="'+ind[it.k].d.plan+'"><figcaption>'+(it.t==='Actual'?'Planta actual':'Planta 2020')+'</figcaption>';f.style.display='block';};
+  fig(pL,items[0]); if(items[1])fig(pR,items[1]); else {pR.style.display='none';pR.innerHTML='';}
+  syncUnder();
 }
 document.getElementById('pPlan').classList.toggle('on',planOn);
 document.getElementById('pPlan').onclick=()=>{planOn=!planOn;document.getElementById('pPlan').classList.toggle('on',planOn);updatePlan();};
