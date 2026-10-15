@@ -82,8 +82,26 @@
   .pfig figcaption{font-size:11.5px;color:#bbb;margin-top:4px;font-weight:600}
   #pR figcaption{text-align:right}
   #notice{flex:1 0 100%;order:5;margin:8px 0 0}
-  /* controles en gris claro, no azul */
-  input[type=range],input[type=checkbox]{accent-color:#d6d6d6}
+  /* controles: toman los colores del indicador activo (--acc gradiente, --accEnd color alto) */
+  :root{--acc:linear-gradient(90deg,#5a5a5a,#cfcfcf);--accEnd:#cfcfcf}
+  .ctl label{color:#9a9a9a}
+  .ctl label span{color:#e8e8e8;font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:22px;padding:0;cursor:pointer;--p:50%}
+  input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,transparent 0 var(--p),#2c2c2c var(--p) 100%),var(--acc)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;margin-top:-6px;border-radius:50%;background:#0b0b0b;border:2px solid var(--accEnd);box-shadow:0 0 0 3px #0b0b0b}
+  input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:#2c2c2c}
+  input[type=range]::-moz-range-progress{height:3px;border-radius:2px;background:var(--acc)}
+  input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:#0b0b0b;border:2px solid var(--accEnd)}
+  input[type=checkbox]{-webkit-appearance:none;appearance:none;margin:0;flex:0 0 auto;width:16px;height:16px;border:1px solid #474747;border-radius:4px;background:#121212;display:grid;place-content:center;cursor:pointer;transition:background-color .15s,border-color .15s}
+  input[type=checkbox]::before{content:"";width:7px;height:3.5px;border-left:2px solid #0b0b0b;border-bottom:2px solid #0b0b0b;transform:translateY(-1px) rotate(-45deg);opacity:0}
+  input[type=checkbox]:checked{background:var(--accEnd);border-color:var(--accEnd)}
+  input[type=checkbox]:checked::before{opacity:1}
+  .ctl label.chk{color:#c8c8c8}
+  .ctl label.chk:hover input:not(:checked){border-color:#777}
+  .ctl select{-webkit-appearance:none;appearance:none;cursor:pointer;padding:7px 30px 7px 10px;background:#141414 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23aaa' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 11px center}
+  .ctl select:hover{border-color:#555}
+  input[type=range]:focus-visible,input[type=checkbox]:focus-visible,.ctl select:focus-visible{outline:2px solid var(--accEnd);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){input[type=checkbox]{transition:none}}
   .mtitle{display:none}
 
   /* ---------- CELULAR: diseño propio, nada encima del 3D ---------- */
@@ -424,6 +442,7 @@ function drawLegend(i){
   const o=ind[i]; legendIdx=i;
   const lg=document.getElementById('legend'); lg.style.display='block';
   document.getElementById('lgTitle').textContent=o.d.name;
+  const rs=document.documentElement.style; rs.setProperty('--acc','linear-gradient(90deg,'+o.d.ramp.join(',')+')'); rs.setProperty('--accEnd',o.d.ramp[o.d.ramp.length-1]);
   const cv=document.getElementById('lgCanvas'), dpr=Math.min(3,Math.max(2,devicePixelRatio||1));
   const w=cv.clientWidth||30,h=cv.clientHeight||260; cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
   const hz=cv.clientWidth>cv.clientHeight;              // en celular la escala va horizontal, bajo el 3D
@@ -543,6 +562,10 @@ document.getElementById('wind').onchange=e=>{windOn=e.target.checked;dirty=true;
 document.getElementById('sW').oninput=e=>{windK=+e.target.value;document.getElementById('vW').textContent=windK.toFixed(1);};
 document.getElementById('wire').onchange=e=>{ind.forEach(o=>{if(o.wf)o.wf.visible=e.target.checked;});};
 document.getElementById('shade').onchange=e=>{ind.forEach(o=>{if(o.live){o.live.set(e.target.checked?o.shd:o.raw);o.geo.attributes.color.needsUpdate=true;}});};
+
+document.querySelectorAll('input[type=range]').forEach(r=>{
+  const f=()=>r.style.setProperty('--p',((r.value-r.min)/(r.max-r.min)*100)+'%'); r.addEventListener('input',f); f();
+});
 
 // ---------- animación ----------
 function setVis(only){ ind.forEach((o,k)=>{ if(o.group)o.group.visible=o.vis&&(only===null||only===k); }); }
