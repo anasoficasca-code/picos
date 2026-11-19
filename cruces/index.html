@@ -6,15 +6,16 @@
 <title>Cruce de capas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400&family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="picos.json" as="fetch" crossorigin>
 <style>
-:root{--campo-0:#050607;--campo-1:#080a0b;--tinta-1:#eaefed;--tinta-2:#a9b3af;--tinta-3:#7a8480;--tinta-4:#4a524f;
+:root{--campo-0:#050607;--tinta-1:#eaefed;--tinta-2:#a9b3af;--tinta-3:#7a8480;--tinta-4:#4a524f;
   --linea:rgb(214 228 222 / .12);--linea-media:rgb(214 228 222 / .22);--acento-1:#cfff5e;
   --brillo-foco:drop-shadow(0 0 1px rgb(207 255 94 / .9)) drop-shadow(0 2px 14px rgb(207 255 94 / .28));
-  --op-atenuado:.26;--op-encima:.1;--op-indirecto:.62;
+  --op-atenuado:.26;--op-indirecto:.62;
   --letra:"Geist",ui-sans-serif,system-ui,sans-serif;--letra-dato:"Geist Mono",ui-monospace,"Cascadia Mono",monospace;--letra-titulo:"Barlow Condensed","Arial Narrow",ui-sans-serif,sans-serif;
-  --t-1:clamp(2.9rem,1.6rem + 3.4vw,5.2rem);--t-2:clamp(2rem,1.4rem + 1.6vw,3rem);--t-menor:.8rem;--t-rotulo:.74rem;
+  --t-2:clamp(2rem,1.4rem + 1.6vw,3rem);--t-menor:.8rem;--t-rotulo:.74rem;
   --curva:cubic-bezier(.16,1,.3,1);--curva-suave:cubic-bezier(.33,1,.68,1);--curva-mover:cubic-bezier(.77,0,.175,1);
-  --t-presion:.16s;--t-rapido:.18s;--t-medio:.42s;--t-lento:.76s;--e-2:8px;--e-3:16px;--e-4:24px;--e-5:40px;--e-6:72px;--e-7:128px;color-scheme:dark}
+  --t-presion:.16s;--t-rapido:.18s;--t-medio:.42s;--t-lento:.76s;--e-2:8px;--e-3:16px;--e-4:24px;--e-5:40px;--e-6:72px;color-scheme:dark}
 *{box-sizing:border-box}
 html{scrollbar-width:thin;scrollbar-color:#2a2f2d transparent}
 body{margin:0;background:var(--campo-0);color:var(--tinta-1);font-family:var(--letra);-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -24,21 +25,23 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .marco a{color:var(--tinta-2);text-decoration:none;justify-self:center;border:1px solid var(--linea);padding:6px 12px;transition:color var(--t-rapido),border-color var(--t-rapido)}
 .marco a:hover{color:var(--tinta-1);border-color:var(--linea-media)}
 
-.genealogia{overflow-x:clip;max-width:1640px;margin:0 auto;padding:var(--e-7) var(--e-5) var(--e-6)}
-.genealogia__cabeza{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--e-3);justify-items:start;margin-bottom:var(--e-3)}
-.genealogia__cabeza h2{justify-self:stretch;margin:0;text-align:center;white-space:nowrap;font:300 min(var(--t-1),6.2vw)/.92 var(--letra-titulo);text-transform:uppercase;letter-spacing:.01em}
-.genealogia__cabeza>p{justify-self:stretch;margin:var(--e-2) 0;text-align:center;color:var(--tinta-2);font-size:var(--t-menor)}
-.operadores{width:min(100%,78ch);list-style:none;margin:0;padding:var(--e-2) 0 0;border-top:1px solid var(--linea);display:grid;gap:1px;line-height:1.45;font-size:var(--t-rotulo);color:var(--tinta-3)}
-.operadores__simbolo{display:inline-block;min-width:5.6rem;font-family:var(--letra-dato);color:var(--tinta-1)}
+/* una sola pantalla: cabeza compacta + red que se ajusta al alto disponible */
+.genealogia{overflow-x:clip;max-width:1640px;margin:0 auto;padding:64px var(--e-5) var(--e-4);min-height:100svh;display:flex;flex-direction:column}
+.genealogia__cabeza{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 40px;align-items:end;margin-bottom:var(--e-3)}
+.genealogia__cabeza h2{grid-column:1/-1;margin:0;text-align:center;white-space:nowrap;font:300 clamp(2.4rem,1.2rem + 2.8vw,4.2rem)/.92 var(--letra-titulo);text-transform:uppercase;letter-spacing:.01em}
+.genealogia__cabeza>p{margin:0;color:var(--tinta-2);font-size:var(--t-menor);max-width:72ch}
+.operadores{list-style:none;margin:0;padding:var(--e-2) 0 0;border-top:1px solid var(--linea);display:grid;grid-template-columns:repeat(2,auto);gap:1px 28px;line-height:1.45;font-size:var(--t-rotulo);color:var(--tinta-3)}
+.operadores__simbolo{display:inline-block;min-width:5.4rem;font-family:var(--letra-dato);color:var(--tinta-1)}
+.genealogia__cabeza .pista{grid-column:1/-1;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 var(--t-rotulo) var(--letra-dato);color:var(--tinta-4);letter-spacing:.06em;text-align:center;min-height:1.2em;transition:color var(--t-medio)}
+.genealogia__cabeza .pista b{color:var(--firma,var(--tinta-2));font-weight:500}
 
-/* ---- red ---- */
-.red{position:relative;display:grid;grid-template-columns:calc(var(--ancho-pila) + 260px) var(--ancho-indices) minmax(300px,1fr);column-gap:clamp(32px,4vw,72px);align-items:stretch;margin-top:var(--e-4)}
+.red{position:relative;display:grid;grid-template-columns:calc(var(--ancho-pila) + 250px) var(--ancho-indices) minmax(260px,1fr);column-gap:clamp(28px,3.4vw,64px);align-items:start;flex:1}
 .red>:not(.red__flujos){position:relative;z-index:1}
-.red__bases{padding-left:260px;padding-top:12px}
-.red__indices{display:grid;grid-template-columns:repeat(2,var(--ancho-nodo));column-gap:72px;align-self:start;height:var(--alto-pila)}
-.red__columna{display:flex;flex-direction:column;justify-content:space-around;gap:var(--e-3)}
-.red__columna--cruces{justify-content:center;gap:clamp(80px,12vh,160px)}
-.red__flujos{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0;transition:clip-path 1.5s var(--curva-mover) .3s}
+.red__bases{padding-left:250px;padding-top:6px}
+.red__indices{display:grid;grid-template-columns:repeat(2,var(--ancho-nodo));column-gap:56px;height:var(--alto-pila)}
+.red__columna{display:flex;flex-direction:column;justify-content:space-around;gap:10px}
+.red__columna:nth-child(2){justify-content:space-evenly}
+.red__flujos{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0;transition:clip-path 1.6s var(--curva-mover) .35s}
 .flujo__trazo{fill:none;stroke-width:1;opacity:.2;transition:opacity var(--t-medio) var(--curva-suave),stroke-width var(--t-medio) var(--curva)}
 .flujo[data-via] .flujo__trazo{stroke-dasharray:3 4}
 .flujo[data-estado=directo] .flujo__trazo{opacity:.95;stroke-width:1.7}
@@ -46,14 +49,17 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .flujo[data-estado=atenuado] .flujo__trazo{opacity:.035}
 .flujo__pulso{fill:none;stroke:#f4fff0;stroke-width:2;stroke-linecap:round;stroke-dasharray:1.5 26;opacity:.85;animation:pulso 1.8s linear infinite}
 @keyframes pulso{to{stroke-dashoffset:-27.5}}
+/* destello que recorre cada filamento al aparecer */
+.flujo__chispa{fill:none;stroke-width:2.2;stroke-linecap:round;opacity:0}
+.red[data-visto] .flujo__chispa{animation:chispa 1.7s var(--curva-mover) backwards;animation-delay:calc(.5s + var(--k) * 26ms)}
+@keyframes chispa{0%{opacity:1;stroke-dashoffset:var(--len)}80%{opacity:.9}100%{opacity:0;stroke-dashoffset:0}}
 
-/* ---- pila ---- */
 .pila{position:relative;flex:none}
 .pila__guias{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:0}
 .pila__guias line{stroke:var(--linea-media);stroke-width:1;stroke-dasharray:2 5}
 .estrato{position:absolute;left:0;pointer-events:none;transition:transform var(--t-medio) var(--curva),opacity var(--t-medio) var(--curva-suave),filter var(--t-medio) var(--curva-suave);will-change:transform,opacity}
 .estrato img{position:absolute;inset:0;width:100%;height:100%;user-select:none;-webkit-user-drag:none}
-.estrato__relieve{transform-origin:50% 99%}
+.estrato__relieve{transform-origin:50% 72%}
 .estrato__contorno{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .estrato__borde{fill:none;stroke:var(--linea-media);stroke-width:1;transition:stroke var(--t-medio)}
 .estrato__zona{fill:transparent;pointer-events:all;cursor:pointer}
@@ -62,12 +68,11 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .estrato[data-estado=seleccionado]{transform:translateY(-6px);filter:brightness(1.08)}
 .estrato[data-estado=seleccionado] .estrato__borde{stroke:var(--acento-1);filter:var(--brillo-foco)}
 .estrato[data-estado=atenuado]{opacity:var(--op-atenuado);filter:saturate(.55)}
-.estrato[data-estado=encima]{opacity:var(--op-encima);filter:saturate(.4)}
 .estrato[data-estado=indirecto]{opacity:var(--op-indirecto)}
-.estrato[data-estado=directo]{filter:brightness(1.12)}
-.estrato[data-estado=directo] .estrato__borde,.estrato[data-estado=foco] .estrato__borde{stroke:color-mix(in srgb,var(--firma) 70%,white)}
+.estrato[data-estado=directo]{transform:translateY(-5px);filter:brightness(1.14)}
+.estrato[data-estado=directo] .estrato__borde{stroke:color-mix(in srgb,var(--firma) 70%,white)}
 .pila__rotulos{list-style:none;margin:0;padding:0;position:absolute;inset:0;pointer-events:none;z-index:400}
-.rotulo{position:absolute;height:0;transition:translate var(--t-medio) var(--curva)}
+.rotulo{position:absolute;height:0}
 .pila--derecha .rotulo{left:var(--x)}
 .pila--izquierda .rotulo{right:calc(100% - var(--x))}
 .rotulo__boton{position:absolute;top:0;transform:translateY(-50%);display:flex;align-items:baseline;gap:9px;white-space:nowrap;pointer-events:auto;padding-block:2px;font-size:var(--t-rotulo);line-height:1.1;color:var(--tinta-3);transition:color var(--t-rapido),opacity var(--t-medio) var(--curva-suave),transform var(--t-medio) var(--curva)}
@@ -78,9 +83,9 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .pila--izquierda .rotulo__boton:before{right:4px;transform-origin:right}
 .rotulo__num{font-family:var(--letra-dato);font-size:.66rem;color:var(--tinta-4);font-variant-numeric:tabular-nums;transition:color var(--t-rapido)}
 .rotulo__nombre{overflow:hidden;text-overflow:ellipsis;max-width:205px}
-.rotulo[data-estado=activo] .rotulo__boton,.rotulo[data-estado=foco] .rotulo__boton{color:var(--tinta-1)}
-.pila--derecha .rotulo[data-estado=activo] .rotulo__boton{transform:translate(6px,-50%)}
+.rotulo[data-estado=activo] .rotulo__boton{color:var(--tinta-1)}
 .pila--izquierda .rotulo[data-estado=activo] .rotulo__boton{transform:translate(-6px,-50%)}
+.pila--derecha .rotulo[data-estado=activo] .rotulo__boton{transform:translate(6px,-50%)}
 .rotulo[data-estado=activo] .rotulo__boton:before{background:var(--firma);transform:scaleX(1.25)}
 .rotulo[data-estado=activo] .rotulo__num,.rotulo[data-estado=directo] .rotulo__num{color:var(--firma)}
 .rotulo[data-estado=seleccionado] .rotulo__boton,.rotulo[data-estado=seleccionado] .rotulo__num{color:var(--acento-1)}
@@ -88,18 +93,17 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .rotulo[data-estado=directo] .rotulo__boton{color:var(--tinta-1)}
 .rotulo[data-estado=directo] .rotulo__boton:before{background:color-mix(in srgb,var(--firma) 80%,transparent)}
 .rotulo[data-estado=indirecto] .rotulo__boton{color:var(--tinta-2)}
-.rotulo[data-estado=atenuado] .rotulo__boton,.rotulo[data-estado=encima] .rotulo__boton{opacity:.38}
+.rotulo[data-estado=atenuado] .rotulo__boton{opacity:.38}
 .rotulo__boton:hover{color:var(--tinta-1)}
 
-/* ---- nodos ---- */
-.nodo{display:flex;flex-direction:column;gap:6px;text-align:left;transition:opacity var(--t-medio) var(--curva-suave),filter var(--t-medio) var(--curva-suave),transform var(--t-medio) var(--curva),scale var(--t-medio) var(--curva)}
+.nodo{display:flex;flex-direction:column;gap:4px;text-align:left;transition:opacity var(--t-medio) var(--curva-suave),filter var(--t-medio) var(--curva-suave),transform var(--t-medio) var(--curva),scale var(--t-medio) var(--curva)}
 .nodo:active{scale:.985;transition-duration:var(--t-presion)}
-.nodo__lienzo{position:relative;display:block;width:100%}
-.nodo__lienzo img{display:block;width:100%;height:100%;transition:filter var(--t-medio) var(--curva-suave)}
+.nodo__lienzo{position:relative;display:block;width:100%;overflow:visible}
+.nodo__lienzo img{display:block;width:100%;height:auto;transform-origin:50% 75%;transition:filter var(--t-medio) var(--curva-suave)}
 .nodo__rotulo{display:flex;align-items:baseline;gap:var(--e-2);padding-left:2px}
-.nodo__simbolo{font-family:var(--letra-dato);font-size:.82rem;color:var(--firma);font-weight:500}
-.nodo__nombre{font-size:.92rem;color:var(--tinta-1);line-height:1.25}
-.nodo__formula{padding-left:2px;text-wrap:balance;font-family:var(--letra-dato);font-size:.66rem;color:var(--tinta-3)}
+.nodo__simbolo{font-family:var(--letra-dato);font-size:.78rem;color:var(--firma);font-weight:500}
+.nodo__nombre{font-size:.86rem;color:var(--tinta-1);line-height:1.2}
+.nodo__formula{padding-left:2px;text-wrap:balance;font-family:var(--letra-dato);font-size:.64rem;color:var(--tinta-3)}
 .nodo[data-estado=foco]{transform:translateY(-6px)}
 .nodo[data-estado=foco] img{filter:brightness(1.16) drop-shadow(0 10px 20px color-mix(in srgb,var(--firma) 26%,transparent))}
 .nodo[data-estado=directo] img{filter:brightness(1.1)}
@@ -108,53 +112,61 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .nodo[aria-pressed=true] img{filter:var(--brillo-foco) brightness(1.08)}
 .nodo[aria-pressed=true] .nodo__nombre{color:var(--acento-1)}
 
-/* ---- síntesis ---- */
+/* columna final: los dos índices compuestos, grandes, como las variantes del referente */
 .red__sintesis{display:grid;align-content:start;min-width:0}
-.sintesis{transition:opacity var(--t-medio) var(--curva-suave),transform var(--t-lento) var(--curva),filter var(--t-medio)}
-.sintesis[data-estado=atenuado]{opacity:.4}
-.sintesis__titulo{font:300 var(--t-2)/.95 var(--letra-titulo);text-transform:uppercase;letter-spacing:.01em;margin:var(--e-3) 0 0}
-.sintesis__prueba{margin-top:var(--e-2);font-size:var(--t-rotulo);color:var(--tinta-3);letter-spacing:.02em;max-width:52ch;line-height:1.45}
-.sintesis__figura{display:block;margin:var(--e-3) -4% 0;cursor:default}
-.sintesis__figura img{display:block;width:100%;height:auto;transition:filter var(--t-medio)}
-.sintesis[data-estado=foco] .sintesis__figura img{filter:brightness(1.12)}
-.sintesis__lista{list-style:none;margin:var(--e-3) 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 16px;font-size:var(--t-rotulo);color:var(--tinta-3)}
-.sintesis__lista b{font-family:var(--letra-dato);font-weight:500;margin-right:6px}
-.sintesis__enlace{display:inline-block;margin-top:var(--e-4);font-size:var(--t-rotulo);color:var(--tinta-2);border-bottom:1px dotted currentColor;text-decoration:none;transition:color var(--t-rapido)}
-.sintesis__enlace:hover{color:var(--acento-1)}
+.sintesis{transition:opacity var(--t-medio) var(--curva-suave),filter var(--t-medio)}
+.sintesis__titulo{font:300 var(--t-2)/.95 var(--letra-titulo);text-transform:uppercase;letter-spacing:.01em;margin:0}
+.sintesis__prueba{margin:var(--e-2) 0 0;font-size:var(--t-rotulo);color:var(--tinta-3);letter-spacing:.02em;max-width:52ch;line-height:1.45}
+.variantes{display:flex;flex-direction:column;gap:var(--e-3);margin-top:var(--e-3)}
+.variante{width:var(--ancho-ct);max-width:100%}
+.variante .nodo__lienzo{margin:-6% -3% -3%}
+.variante .nodo__simbolo{font-size:.86rem}
+.variante .nodo__nombre{font-size:1rem}
+.variante .nodo__formula{font-size:.72rem;color:var(--firma);opacity:.9}
 
-/* ---- entrada escalonada (igual que el referente) ---- */
+/* ---- entrada: escalonada como el referente + los picos crecen ---- */
 @keyframes rotular{0%{opacity:0;translate:-10px 0}}
 @keyframes velar{0%{opacity:0}}
 @keyframes surgir{0%{opacity:0;translate:-16px 0;filter:blur(4px)}}
+@keyframes crecer{0%{opacity:0;transform:translateY(7%) scaleY(.18)}60%{opacity:1}}
 .red:not([data-visto]) .red__flujos{clip-path:inset(-40px 100% -40px -40px)}
 .red[data-visto] .red__flujos{clip-path:inset(-40px -40px -40px -40px)}
 .red:not([data-visto]) :is(.estrato,.rotulo__boton,.nodo,.sintesis){opacity:0}
-.red[data-visto] .red__bases .estrato{animation:velar .7s var(--curva-suave) backwards;animation-delay:calc(var(--i) * 18ms)}
-.red[data-visto] .red__bases .rotulo__boton{animation:rotular .64s var(--curva) backwards;animation-delay:calc(.16s + var(--i) * 18ms)}
-.red[data-visto] .nodo{animation:surgir .8s var(--curva) backwards;animation-delay:calc(.7s + var(--n) * 80ms)}
-.red[data-visto] .red__columna--cruces .nodo{animation-delay:calc(1.08s + var(--n) * 80ms)}
-.red[data-visto] .sintesis{animation:surgir 1s var(--curva) 1.45s backwards}
+.red[data-visto] .red__bases .estrato{animation:velar .7s var(--curva-suave) backwards;animation-delay:calc(var(--i) * 30ms)}
+.red[data-visto] .estrato__relieve{animation:crecer 1.1s var(--curva) backwards;animation-delay:calc(.15s + var(--i) * 40ms)}
+.red[data-visto] .red__bases .rotulo__boton{animation:rotular .64s var(--curva) backwards;animation-delay:calc(.16s + var(--i) * 30ms)}
+.red[data-visto] .nodo{animation:surgir .8s var(--curva) backwards;animation-delay:calc(.8s + var(--n) * 90ms)}
+.red[data-visto] .nodo__lienzo img{animation:crecer 1.2s var(--curva) backwards;animation-delay:calc(.95s + var(--n) * 90ms)}
+.red[data-visto] .sintesis{animation:surgir 1s var(--curva) 1.5s backwards}
+.red[data-visto] .variante{animation-delay:calc(1.7s + var(--n) * 160ms)}
+.red[data-visto] .variante .nodo__lienzo img{animation-delay:calc(1.85s + var(--n) * 160ms)}
 
-#cargando{display:flex;align-items:center;justify-content:center;min-height:50vh;font:400 var(--t-rotulo) var(--letra-dato);color:var(--tinta-3);letter-spacing:.12em;text-transform:uppercase}
-.pie{max-width:1640px;margin:0 auto;padding:var(--e-4) var(--e-5) var(--e-6);border-top:1px solid var(--linea);font-size:var(--t-rotulo);line-height:1.6;color:var(--tinta-4)}
+#cargando{display:flex;align-items:center;justify-content:center;flex:1;font:400 var(--t-rotulo) var(--letra-dato);color:var(--tinta-3);letter-spacing:.12em;text-transform:uppercase}
+#cargando i{display:block;width:120px;height:1px;margin-top:12px;background:linear-gradient(90deg,transparent,var(--acento-1),transparent);background-size:200% 100%;animation:barrer 1.1s linear infinite}
+@keyframes barrer{from{background-position:100% 0}to{background-position:-100% 0}}
+.pie{max-width:1640px;margin:0 auto;padding:var(--e-3) var(--e-5) var(--e-5);border-top:1px solid var(--linea);font-size:.7rem;line-height:1.6;color:var(--tinta-4)}
 
-@media (prefers-reduced-motion:reduce){.flujo__pulso{animation:none;stroke-dasharray:none;opacity:.35}.red[data-visto] :is(.estrato,.rotulo__boton,.nodo,.sintesis){animation:none}}
+@media (prefers-reduced-motion:reduce){.flujo__pulso{animation:none;stroke-dasharray:none;opacity:.35}.red[data-visto] :is(.estrato,.estrato__relieve,.rotulo__boton,.nodo,.nodo__lienzo img,.sintesis,.flujo__chispa){animation:none}}
 @media (max-width:980px){
-  .genealogia{padding:96px 16px var(--e-6)}
-  .genealogia__cabeza h2{white-space:normal}
+  .genealogia{padding:84px 16px var(--e-5);min-height:0}
+  .genealogia__cabeza{grid-template-columns:1fr}
+  .genealogia__cabeza h2{white-space:normal;text-align:left}
+  .operadores{grid-template-columns:1fr}
+  .genealogia__cabeza .pista{text-align:left}
   .marco{padding:0 16px;grid-template-columns:1fr auto}
   .marco__lugar{display:none}
   .red{grid-template-columns:1fr;row-gap:var(--e-6)}
   .red__bases{padding-left:0;padding-top:0;justify-self:start}
   .red__indices{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--e-4);height:auto}
-  .red__columna,.red__columna--cruces{justify-content:start;gap:var(--e-4)}
-  .red__columna--cruces:before{content:"Segundo cruce";font:400 var(--t-rotulo) var(--letra-dato);color:var(--tinta-3);letter-spacing:.12em;text-transform:uppercase}
-  .pie{padding:var(--e-4) 16px var(--e-6)}
+  .red__columna{justify-content:start!important;gap:var(--e-4)}
+  .variantes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--e-4)}
+  .variante{width:auto}
+  .pie{padding:var(--e-4) 16px var(--e-5)}
   .pila--derecha .rotulo__boton{white-space:normal;width:max-content;padding-left:22px;gap:6px;align-items:center}
   .pila--derecha .rotulo__boton:before{width:14px;left:2px}
   .pila--derecha .rotulo__nombre{max-width:var(--rotulo-max,200px);overflow:visible;line-height:1.02;text-wrap:balance}
 }
-@media (max-width:720px){.nodo__formula,.rotulo__num{font-size:.6875rem}}
+@media (max-width:560px){.variantes{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -166,21 +178,21 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 <main>
   <section class="genealogia" id="genealogia" aria-labelledby="titulo-genealogia">
     <header class="genealogia__cabeza">
-      <h2 id="titulo-genealogia">De 18 capas a 9 indicadores</h2>
+      <h2 id="titulo-genealogia">De 18 capas a 9 índices</h2>
       <p>Cada filamento es una relación de las fórmulas de la presentación. Pase el cursor por una capa o un índice para ver qué mapas lo producen; haga clic para fijarlo.</p>
       <ul class="operadores">
-        <li><span class="operadores__simbolo">(x+y+z)/3</span> media: varias evidencias suman por igual</li>
-        <li><span class="operadores__simbolo">(x+y)−z</span> diferencia: una condición resta a las otras</li>
-        <li><span class="operadores__simbolo">x·y</span> coincidencia: alto solo donde ambas condiciones lo son</li>
-        <li><span class="operadores__simbolo">x·((y+z)/2)</span> la media de dos actividades ponderada por la población</li>
+        <li><span class="operadores__simbolo">(x+y+z)/3</span> media: suman por igual</li>
+        <li><span class="operadores__simbolo">(x+y)−z</span> una condición resta</li>
+        <li><span class="operadores__simbolo">x·y</span> alto solo si ambas lo son</li>
+        <li><span class="operadores__simbolo">x·((y+z)/2)</span> ponderado por población</li>
       </ul>
+      <p class="pista" id="pista"></p>
     </header>
-    <div id="cargando">Generando picos…</div>
+    <div id="cargando"><div>Levantando picos<i></i></div></div>
   </section>
   <p class="pie">Capas base de la presentación «Kennedy»: índices espectrales (Sentinel-2, Landsat-8), capas prediales y de servicios (SHP &amp; QGIS) y concentración de gases. La altura de cada pico es el valor normalizado 0–1 de la capa en blanco y negro; el color es el de su mapa original. Los picos de los índices vienen de las mismas mallas del visor 3D.</p>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ================= datos =================
 // capas base de abajo (01) hacia arriba (18)
@@ -204,30 +216,29 @@ const BASE=[
   {id:'ndvi', n:'Vegetación (NDVI)'},
   {id:'eep',  n:'EEP y parques'},
 ];
-const DIM=[   // primer cruce (de arriba hacia abajo)
+// primer cruce en dos columnas (como «dimensiones» y «cruces» del referente)
+const COL_A=[
   {id:'SE', n:'Soporte ecológico', in:['ndvi','ndmi','eep'], f:'(NDVI + NDMI + EEP) / 3'},
   {id:'IC', n:'Islas de calor', in:['flir','ndbi','ndvi'], f:'(FLIR + NDBI) − NDVI'},
   {id:'CCL',n:'Concentración comercial y logística', in:['icom','ndbi','flir'], f:'(Int. comercial + NDBI + FLIR) / 3'},
   {id:'PA', n:'Presión sobre el aire', in:['no2','co_g','ch4'], f:'(NO₂ + CO + CH₄) / 3'},
-  {id:'PM', n:'Presión sobre la movilidad vehicular', in:['no2','malla','acc'], f:'(NO₂ + Malla vial + Accidentalidad) / 3'},
+];
+const COL_B=[
+  {id:'PM', n:'Presión sobre la movilidad', in:['no2','malla','acc'], f:'(NO₂ + Malla vial + Accidentalidad) / 3'},
   {id:'OC', n:'Organizaciones comunitarias', in:['jac','eqc'], f:'(JAC + Equipamientos) / 2'},
   {id:'CO', n:'Densidad del conocimiento', in:['col','edu','bib'], f:'(Colegios + Ed. superior) − Bibliored'},
 ];
-const CRU=[   // segundo cruce
-  {id:'EPO',n:'Exposición poblacional', in:['CCL','dens'], f:'CCL × Densidad poblacional'},
-  {id:'CV', n:'Conflicto vivienda-actividad', in:['dens','icom','ind'], f:'Densidad × ((Int. comercial + Industria) / 2)'},
+const DIM=[...COL_A,...COL_B];
+// segundo cruce: la columna final (en el referente, las dos variantes de la síntesis)
+const CRU=[
+  {id:'EPO',n:'Exposición poblacional', in:['CCL','dens'], f:'EPO = CCL × Densidad poblacional'},
+  {id:'CV', n:'Conflicto vivienda-actividad', in:['dens','icom','ind'], f:'CV = Densidad × ((Int. comercial + Industria) / 2)'},
 ];
-const FIN='IND';                       // los 9 indicadores del visor
 const IDX=[...DIM,...CRU];
 const esBase=id=>BASE.some(b=>b.id===id);
-// enlaces: base → índice, índice → índice, índice → indicadores (los del primer cruce pasan por encima del segundo: «via»)
 const ENL=[];
-IDX.forEach(d=>d.in.forEach(i=>ENL.push({desde:i,hacia:d.id})));
-DIM.forEach(d=>ENL.push({desde:d.id,hacia:FIN,via:true}));
-CRU.forEach(d=>ENL.push({desde:d.id,hacia:FIN}));
+IDX.forEach(d=>d.in.forEach(i=>ENL.push({desde:i,hacia:d.id,via:CRU.includes(d)&&esBase(i)})));
 const clave=e=>e.desde+'>'+e.hacia;
-
-// relaciones de un foco: aguas arriba y aguas abajo, directo (vecino) o indirecto
 function relaciones(F){
   const nodos=new Map([[F,'foco']]), enlaces=new Map();
   const ir=(id,arriba,d)=>{ for(const e of ENL){ const [a,b]=arriba?[e.hacia,e.desde]:[e.desde,e.hacia];
@@ -239,80 +250,87 @@ function relaciones(F){
   return {nodos,enlaces};
 }
 
-// ================= render de los picos (three.js, una vez) =================
-const W=257.6, H=223.4;
-const EL=32*Math.PI/180, AZ=45*Math.PI/180;
-const DIR=new THREE.Vector3(Math.cos(EL)*Math.sin(AZ),Math.sin(EL),Math.cos(EL)*Math.cos(AZ));
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true}); renderer.setClearColor(0,0); renderer.setPixelRatio(1);
-const camera=new THREE.OrthographicCamera(-1,1,1,-1,-5000,5000); camera.position.copy(DIR).multiplyScalar(1000); camera.lookAt(0,0,0); camera.updateMatrixWorld();
-const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});
-async function cargarCapa(id){
-  const [hi,ci]=await Promise.all([loadImg('capas/'+id+'_h.png'),loadImg('capas/'+id+'_c.png')]);
-  const w=hi.width,h=hi.height,cv=document.createElement('canvas');cv.width=w;cv.height=h;const x=cv.getContext('2d',{willReadFrequently:true});
-  x.drawImage(hi,0,0);const hd=x.getImageData(0,0,w,h).data; x.clearRect(0,0,w,h);x.drawImage(ci,0,0);const cd=x.getImageData(0,0,w,h).data;
-  const pc=document.createElement('canvas');pc.width=w;pc.height=h;const px=pc.getContext('2d'),pim=px.createImageData(w,h);
-  let r=0,g=0,b=0,k=0;
-  for(let q=0;q<w*h*4;q+=4){ for(let j=0;j<3;j++)pim.data[q+j]=Math.min(255,22+cd[q+j]*.58); pim.data[q+3]=255;
-    if(hd[q]>200){r+=cd[q];g+=cd[q+1];b+=cd[q+2];k++;} }
-  px.putImageData(pim,0,0);
-  const firma=k?'#'+[r,g,b].map(v=>Math.round(v/k).toString(16).padStart(2,'0')).join(''):'#9aa0a8';
-  return {w,h,hd,cd,plate:pc,firma};
+// ================= picos =================
+// la página normal carga los picos ya generados (picos/*.webp + picos.json).
+// con ?generar se fabrican en el navegador con three.js y se guardan con el servidor local de herramientas.
+const fotos={}, firmas={};
+const archivo=k=>(esBase(k)?'b_':'i_')+k.toLowerCase()+'.webp';
+async function cargar(){
+  if(new URLSearchParams(location.search).has('generar')) return generarPicos();
+  const j=await fetch('picos.json').then(r=>r.json());
+  Object.assign(firmas,j.firmas);
+  for(const k in j.fotos) fotos[k]={...j.fotos[k],url:'picos/'+j.fotos[k].f};
+  await Promise.all(Object.values(fotos).map(f=>{const i=new Image();i.src=f.url;return i.decode().catch(()=>{});}));
 }
-function grupoCapa(L,Hh){
-  const g=new THREE.Group(), tex=new THREE.CanvasTexture(L.plate); tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
-  const pl=new THREE.Mesh(new THREE.PlaneGeometry(2*W,2*H),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide})); pl.rotation.x=-Math.PI/2; g.add(pl);
-  const P=[],C=[];
-  for(let r=0;r<L.h;r++)for(let c=0;c<L.w;c++){ const k=(r*L.w+c)*4, v=L.hd[k]/255; if(v<0.035)continue;
-    const x=-W+(c+.5)/L.w*2*W, z=-H+(r+.5)/L.h*2*H, R=L.cd[k]/255,G=L.cd[k+1]/255,B=L.cd[k+2]/255;
-    P.push(x,0.3,z,x,0.3+v*Hh,z); C.push(R*.22,G*.22,B*.22,Math.min(1,R*1.12+.04),Math.min(1,G*1.12+.04),Math.min(1,B*1.12+.04)); }
-  const ng=new THREE.BufferGeometry(); ng.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); ng.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
-  g.add(new THREE.LineSegments(ng,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.92})));
-  return g;
-}
-const esquinas=y=>[[-W,-H],[W,-H],[W,H],[-W,H]].map(([x,z])=>new THREE.Vector3(x,y,z));
-function fotografiar(scene,pts,anchoPx){
-  const inv=camera.matrixWorldInverse,v=new THREE.Vector3(); let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
-  for(const p of pts){v.copy(p).applyMatrix4(inv);x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y);}
-  const m=4; camera.left=x0-m;camera.right=x1+m;camera.top=y1+m;camera.bottom=y0-m;camera.updateProjectionMatrix();
-  const pxu=anchoPx/(x1-x0+2*m), cw=Math.round(anchoPx), ch=Math.round((y1-y0+2*m)*pxu);
-  renderer.setSize(cw,ch,false); renderer.render(scene,camera);
-  const proy=p=>{v.copy(p).project(camera);return [(v.x+1)/2,(1-v.y)/2];};
-  return {url:renderer.domElement.toDataURL('image/png'),cw,ch,proy};
-}
-// esquinas de la placa ordenadas: [izquierda(entrada), arriba, derecha(salida), abajo]
-function contorno(proy,y){ const cs=esquinas(y).map(proy);
-  const L=cs.reduce((a,b)=>b[0]<a[0]?b:a), R=cs.reduce((a,b)=>b[0]>a[0]?b:a), T=cs.reduce((a,b)=>b[1]<a[1]?b:a), B=cs.reduce((a,b)=>b[1]>a[1]?b:a);
-  return [L,T,R,B]; }
-function liberar(s){s.traverse(o=>{if(o.geometry)o.geometry.dispose(); if(o.material){if(o.material.map)o.material.map.dispose();o.material.dispose();}});}
-
-const NH_BASE=46, NH_IDX=62;
-const fotos={}, firmas={}, rampas={};
-async function generar(){
+async function generarPicos(){
+  await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+  const W=257.6, H=223.4, EL=32*Math.PI/180, AZ=45*Math.PI/180;
+  const DIR=new THREE.Vector3(Math.cos(EL)*Math.sin(AZ),Math.sin(EL),Math.cos(EL)*Math.cos(AZ));
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true}); renderer.setClearColor(0,0); renderer.setPixelRatio(1);
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,-5000,5000); camera.position.copy(DIR).multiplyScalar(1000); camera.lookAt(0,0,0); camera.updateMatrixWorld();
+  const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});
+  async function cargarCapa(id){
+    const [hi,ci]=await Promise.all([loadImg('capas/'+id+'_h.png'),loadImg('capas/'+id+'_c.png')]);
+    const w=hi.width,h=hi.height,cv=document.createElement('canvas');cv.width=w;cv.height=h;const x=cv.getContext('2d',{willReadFrequently:true});
+    x.drawImage(hi,0,0);const hd=x.getImageData(0,0,w,h).data; x.clearRect(0,0,w,h);x.drawImage(ci,0,0);const cd=x.getImageData(0,0,w,h).data;
+    const pc=document.createElement('canvas');pc.width=w;pc.height=h;const px=pc.getContext('2d'),pim=px.createImageData(w,h);
+    let r=0,g=0,b=0,k=0;
+    for(let q=0;q<w*h*4;q+=4){ for(let j=0;j<3;j++)pim.data[q+j]=Math.min(255,22+cd[q+j]*.58); pim.data[q+3]=255; if(hd[q]>200){r+=cd[q];g+=cd[q+1];b+=cd[q+2];k++;} }
+    px.putImageData(pim,0,0);
+    return {w,h,hd,cd,plate:pc,firma:k?'#'+[r,g,b].map(v=>Math.round(v/k).toString(16).padStart(2,'0')).join(''):'#9aa0a8'};
+  }
+  function grupoCapa(L,Hh){
+    const g=new THREE.Group(), tex=new THREE.CanvasTexture(L.plate); tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+    const pl=new THREE.Mesh(new THREE.PlaneGeometry(2*W,2*H),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide})); pl.rotation.x=-Math.PI/2; g.add(pl);
+    const P=[],C=[];
+    for(let r=0;r<L.h;r++)for(let c=0;c<L.w;c++){ const k=(r*L.w+c)*4, v=L.hd[k]/255; if(v<0.035)continue;
+      const x=-W+(c+.5)/L.w*2*W, z=-H+(r+.5)/L.h*2*H, R=L.cd[k]/255,G=L.cd[k+1]/255,B=L.cd[k+2]/255;
+      P.push(x,0.3,z,x,0.3+v*Hh,z); C.push(R*.22,G*.22,B*.22,Math.min(1,R*1.12+.04),Math.min(1,G*1.12+.04),Math.min(1,B*1.12+.04)); }
+    const ng=new THREE.BufferGeometry(); ng.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); ng.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
+    g.add(new THREE.LineSegments(ng,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.92})));
+    return g;
+  }
+  const esquinas=y=>[[-W,-H],[W,-H],[W,H],[-W,H]].map(([x,z])=>new THREE.Vector3(x,y,z));
+  function foto(scene,pts,anchoPx){
+    const inv=camera.matrixWorldInverse,v=new THREE.Vector3(); let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+    for(const p of pts){v.copy(p).applyMatrix4(inv);x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y);}
+    const m=4; camera.left=x0-m;camera.right=x1+m;camera.top=y1+m;camera.bottom=y0-m;camera.updateProjectionMatrix();
+    const pxu=anchoPx/(x1-x0+2*m), cw=Math.round(anchoPx), ch=Math.round((y1-y0+2*m)*pxu);
+    renderer.setSize(cw,ch,false); renderer.render(scene,camera);
+    const cs=esquinas(0).map(p=>{v.copy(p).project(camera);return [(v.x+1)/2,(1-v.y)/2];});
+    const L=cs.reduce((a,b)=>b[0]<a[0]?b:a), R=cs.reduce((a,b)=>b[0]>a[0]?b:a), T=cs.reduce((a,b)=>b[1]<a[1]?b:a), B=cs.reduce((a,b)=>b[1]>a[1]?b:a);
+    return {url:renderer.domElement.toDataURL('image/webp',0.9),cw,ch,c:[L,T,R,B]};
+  }
+  const liberar=s=>s.traverse(o=>{if(o.geometry)o.geometry.dispose(); if(o.material){if(o.material.map)o.material.map.dispose();o.material.dispose();}});
   const meta=await fetch('indices.json').then(r=>r.json());
   for(const k in meta){ const r=meta[k].ramp; let best=r[r.length-1],bs=-1;
-    for(const h of r){const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255),mx=Math.max(...c),mn=Math.min(...c),s=mx?(mx-mn):0; if(s*mx>bs){bs=s*mx;best=h;}}
-    firmas[k]=best; rampas[k]=r; }
-  const capas={};
-  for(const b of BASE){ const L=await cargarCapa(b.id); firmas[b.id]=L.firma; capas[b.id]=L;
-    const s=new THREE.Scene(); s.add(grupoCapa(L,NH_BASE));
-    const f=fotografiar(s,[...esquinas(0),...esquinas(NH_BASE)],560); f.c=contorno(f.proy,0); fotos[b.id]=f; liberar(s); }
-  const idxL={};
-  for(const d of IDX){ const L=await cargarCapa('i_'+d.id.toLowerCase()); idxL[d.id]=L;
-    const s=new THREE.Scene(); s.add(grupoCapa(L,NH_IDX));
-    const f=fotografiar(s,[...esquinas(0),...esquinas(NH_IDX)],460); f.c=contorno(f.proy,0); fotos[d.id]=f; liberar(s); }
-  // síntesis: los 9 indicadores apilados
-  const s=new THREE.Scene(), G=64, NHs=34, pts=[], orden=[...IDX].reverse();
-  orden.forEach((d,k)=>{const g=grupoCapa(idxL[d.id],NHs); g.position.y=k*G; s.add(g); pts.push(...esquinas(k*G),...esquinas(k*G+NHs));});
-  const f=fotografiar(s,pts,900); f.c=contorno(f.proy,((orden.length-1)/2)*G); fotos[FIN]=f; liberar(s);
+    for(const h of r){const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255),mx=Math.max(...c),mn=Math.min(...c); if((mx-mn)*mx>bs){bs=(mx-mn)*mx;best=h;}}
+    firmas[k]=best; }
+  const lote=[...BASE.map(b=>[b.id,b.id,46,560]),...IDX.map(d=>[d.id,'i_'+d.id.toLowerCase(),62,CRU.includes(d)?720:460])];
+  for(const [k,src,nh,px] of lote){ const L=await cargarCapa(src); if(esBase(k))firmas[k]=L.firma;
+    const s=new THREE.Scene(); s.add(grupoCapa(L,nh)); fotos[k]=foto(s,[...esquinas(0),...esquinas(nh)],px); liberar(s); }
+  const out={firmas,fotos:{}};
+  for(const k in fotos){ const f=fotos[k], nombre=archivo(k);
+    await fetch('/guardar/cruces/picos/'+nombre,{method:'POST',body:await (await fetch(f.url)).blob()});
+    out.fotos[k]={f:nombre,cw:f.cw,ch:f.ch,c:f.c.map(p=>p.map(v=>+v.toFixed(5)))}; }
+  await fetch('/guardar/cruces/picos.json',{method:'POST',body:JSON.stringify(out)});
+  console.log('[picos] guardados',Object.keys(fotos).length);
 }
 
 // ================= interfaz =================
-const sec=document.getElementById('genealogia');
-let red, svg, pila, estratos={}, rotulos={}, nodos={}, sintesis, anclas={};
-let hover=null, fijo=null;
+const sec=document.getElementById('genealogia'), pista=document.getElementById('pista');
+let red, svg, pila, estratos={}, rotulos={}, nodos={}, sintesis;
+let hover=null, fijo=null, auto=null;
 const angosta=()=>innerWidth<980;
 const firma=id=>firmas[id]||'#a9b3af';
+const nombre=id=>(BASE.find(b=>b.id===id)||IDX.find(d=>d.id===id)).n;
+const on=(el,id)=>{el.addEventListener('pointerenter',()=>pasar(id));el.addEventListener('pointerleave',()=>pasar(null));el.addEventListener('focus',()=>pasar(id));el.addEventListener('blur',()=>pasar(null));el.addEventListener('click',()=>elegir(id));};
 
+function nodoHTML(d,cls,n){
+  const f=fotos[d.id], b=document.createElement('button'); b.type='button'; b.className='nodo'+(cls?' '+cls:''); b.style.setProperty('--firma',firma(d.id)); b.style.setProperty('--n',n);
+  b.innerHTML=`<span class="nodo__lienzo"><img src="${f.url}" alt="${d.n} en picos" width="${f.cw}" height="${f.ch}" draggable="false"></span><span class="nodo__rotulo"><span class="nodo__simbolo">${d.id}</span><span class="nodo__nombre">${d.n}</span></span><span class="nodo__formula">${d.f}</span>`;
+  on(b,d.id); nodos[d.id]=b; return b;
+}
 function construir(){
   document.getElementById('cargando').remove();
   red=document.createElement('div'); red.className='red'; sec.appendChild(red);
@@ -323,59 +341,51 @@ function construir(){
   BASE.forEach((b,h)=>{
     const e=document.createElement('div'); e.className='estrato'; e.style.setProperty('--i',h); e.style.setProperty('--firma',firma(b.id)); e.style.zIndex=h+1;
     const f=fotos[b.id], pts=f.c.map(p=>p.map(v=>(v*100).toFixed(3)).join(',')).join(' ');
-    e.innerHTML=`<img class="estrato__relieve" src="${f.url}" alt="" decoding="async" draggable="false"><svg class="estrato__contorno" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon class="estrato__borde" points="${pts}" vector-effect="non-scaling-stroke"/><polygon class="estrato__zona" points="${pts}"/></svg>`;
-    const z=e.querySelector('.estrato__zona'); z.addEventListener('pointerenter',()=>pasar(b.id)); z.addEventListener('pointerleave',()=>pasar(null)); z.addEventListener('click',()=>elegir(b.id));
-    pila.appendChild(e); estratos[b.id]=e;
+    e.innerHTML=`<img class="estrato__relieve" src="${f.url}" alt="" draggable="false"><svg class="estrato__contorno" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon class="estrato__borde" points="${pts}" vector-effect="non-scaling-stroke"/><polygon class="estrato__zona" points="${pts}"/></svg>`;
+    on(e.querySelector('.estrato__zona'),b.id); pila.appendChild(e); estratos[b.id]=e;
   });
   const ol=document.createElement('ol'); ol.className='pila__rotulos'; pila.appendChild(ol);
   BASE.forEach((b,h)=>{
     const li=document.createElement('li'); li.className='rotulo'; li.style.setProperty('--i',h); li.style.setProperty('--firma',firma(b.id));
     li.innerHTML=`<button type="button" class="rotulo__boton"><span class="rotulo__num">${String(h+1).padStart(2,'0')}</span><span class="rotulo__nombre">${b.n}</span></button>`;
-    const bt=li.firstChild; bt.addEventListener('pointerenter',()=>pasar(b.id)); bt.addEventListener('pointerleave',()=>pasar(null)); bt.addEventListener('focus',()=>pasar(b.id)); bt.addEventListener('blur',()=>pasar(null)); bt.addEventListener('click',()=>elegir(b.id));
-    ol.appendChild(li); rotulos[b.id]=li;
+    on(li.firstChild,b.id); ol.appendChild(li); rotulos[b.id]=li;
   });
-  // índices
   const ind=document.createElement('div'); ind.className='red__indices'; red.appendChild(ind);
-  const col=(lista,cls)=>{ const c=document.createElement('div'); c.className='red__columna'+(cls?' '+cls:''); ind.appendChild(c);
-    lista.forEach((d,n)=>{ const f=fotos[d.id], b=document.createElement('button'); b.type='button'; b.className='nodo'; b.style.setProperty('--firma',firma(d.id)); b.style.setProperty('--n',n);
-      b.innerHTML=`<span class="nodo__lienzo"><img src="${f.url}" alt="${d.n} en picos" width="${f.cw}" height="${f.ch}" decoding="async" draggable="false"></span><span class="nodo__rotulo"><span class="nodo__simbolo">${d.id}</span><span class="nodo__nombre">${d.n}</span></span><span class="nodo__formula">${d.f}</span>`;
-      b.addEventListener('pointerenter',()=>pasar(d.id)); b.addEventListener('pointerleave',()=>pasar(null)); b.addEventListener('focus',()=>pasar(d.id)); b.addEventListener('blur',()=>pasar(null)); b.addEventListener('click',()=>elegir(d.id));
-      c.appendChild(b); nodos[d.id]=b; }); };
-  col(DIM); col(CRU,'red__columna--cruces');
-  // síntesis
+  [COL_A,COL_B].forEach((lista,ci)=>{ const c=document.createElement('div'); c.className='red__columna'; ind.appendChild(c); lista.forEach((d,n)=>c.appendChild(nodoHTML(d,'',n+ci*4))); });
   const rs=document.createElement('div'); rs.className='red__sintesis'; red.appendChild(rs);
-  sintesis=document.createElement('div'); sintesis.className='sintesis'; sintesis.style.setProperty('--firma','#cfff5e');
-  const fs=fotos[FIN];
-  sintesis.innerHTML=`<h3 class="sintesis__titulo">Nueve indicadores</h3><p class="sintesis__prueba">Siete índices del primer cruce y dos compuestos del segundo: el conjunto que se recorre en el visor 3D.</p><span class="sintesis__figura"><img src="${fs.url}" alt="Los nueve indicadores apilados en picos" width="${fs.cw}" height="${fs.ch}" decoding="async" draggable="false"></span><ul class="sintesis__lista">${IDX.map(d=>`<li><b style="color:${firma(d.id)}">${d.id}</b>${d.n}</li>`).join('')}</ul><a class="sintesis__enlace" href="../">Recorrerlos en 3D →</a>`;
-  const fig=sintesis.querySelector('.sintesis__figura'); fig.addEventListener('pointerenter',()=>pasar(FIN)); fig.addEventListener('pointerleave',()=>pasar(null));
+  sintesis=document.createElement('div'); sintesis.className='sintesis';
+  sintesis.innerHTML=`<h3 class="sintesis__titulo">Índices compuestos</h3><p class="sintesis__prueba">Segundo cruce · EPO multiplica la actividad comercial por la población; CV la pondera con la industria pesada.</p><div class="variantes"></div>`;
+  CRU.forEach((d,n)=>sintesis.querySelector('.variantes').appendChild(nodoHTML(d,'variante',n)));
   rs.appendChild(sintesis);
-
-  medir(); addEventListener('resize',medir);
-  const io=new IntersectionObserver(es=>{ if(es[es.length-1].isIntersecting){ red.setAttribute('data-visto',''); io.disconnect(); } },{rootMargin:'0px 0px -25% 0px'});
+  medir(); addEventListener('resize',()=>{clearTimeout(medir.t);medir.t=setTimeout(medir,80);});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(medir);
+  const io=new IntersectionObserver(es=>{ if(es[es.length-1].isIntersecting){ red.setAttribute('data-visto',''); io.disconnect(); setTimeout(iniciarRecorrido,3600); } },{rootMargin:'0px 0px -20% 0px'});
   io.observe(red);
+  red.addEventListener('pointerenter',detenerRecorrido); red.addEventListener('pointerleave',()=>{clearTimeout(auto&&auto.t);reanudar();});
 }
 
-// tamaños como el referente: ancho de pila, paso entre estratos y ancho de nodo
+// tamaños: la red cabe en el alto de la pantalla (como el referente)
 function medir(){
-  const vw=innerWidth, y=Math.min(1560,vw-(angosta()?32:72)), na=angosta();
-  const g=na?Math.min(220,(y-24)/2):Math.max(140,Math.min(190,y*.12));
-  const xnI=fotos[DIM[0].id].ch/fotos[DIM[0].id].cw;
-  const altoCol=na?0:DIM.length*(g*xnI+56)+(DIM.length-1)*16;
-  const ancho=na?Math.min(y*(vw<=380?.5:.56),360):Math.max(200,Math.min(270,y*.17));
-  const xn=fotos[BASE[0].id].ch/fotos[BASE[0].id].cw, alto=ancho*xn, n=BASE.length;
-  const paso=na?(vw<=720?30:26):Math.max(26,(altoCol-alto-12)/(n-1));
+  const vw=innerWidth, vh=innerHeight, na=angosta(), y=Math.min(1560,vw-(na?32:80)), n=BASE.length;
+  const cab=sec.querySelector('.genealogia__cabeza').getBoundingClientRect().height;
+  const altoMax=na?0:Math.max(500,Math.min(780,vh-64-cab-40));
+  const xn=fotos[BASE[0].id].ch/fotos[BASE[0].id].cw, xnI=fotos.SE.ch/fotos.SE.cw;
+  let ancho=na?Math.min(y*(vw<=380?.5:.56),360):Math.max(190,Math.min(260,y*.165));
+  let g=na?Math.min(220,(y-24)/2):Math.max(120,Math.min(175,(altoMax/COL_A.length-62)/xnI));
+  const alto=ancho*xn;
+  const paso=na?(vw<=720?30:26):Math.max(14,(altoMax-alto)/(n-1));
   red.classList.toggle('red--angosta',na);
   pila.classList.toggle('pila--izquierda',!na); pila.classList.toggle('pila--derecha',na);
   const altoPila=(n-1)*paso+alto;
-  pila.style.width=ancho+'px'; pila.style.height=altoPila+'px'; pila.style.setProperty('--paso',paso);
-  if(na) pila.style.setProperty('--rotulo-max',Math.max(80,y-fotos[BASE[0].id].c[2][0]*ancho-56)+'px');
+  pila.style.width=ancho+'px'; pila.style.height=altoPila+'px';
   red.style.setProperty('--ancho-nodo',g+'px'); red.style.setProperty('--ancho-pila',ancho+'px');
-  red.style.setProperty('--ancho-indices',(g*2+72)+'px'); red.style.setProperty('--alto-pila',(altoPila+12)+'px');
+  red.style.setProperty('--ancho-indices',(g*2+56)+'px'); red.style.setProperty('--alto-pila',altoPila+'px');
+  const libre=y-(ancho+250)-(g*2+56)-2*56; red.style.setProperty('--ancho-ct',Math.max(240,Math.min(g*1.9,libre,(altoMax-130)/2/(fotos.EPO.ch/fotos.EPO.cw)*0.95))+'px');
+  if(na) pila.style.setProperty('--rotulo-max',Math.max(80,y-fotos[BASE[0].id].c[2][0]*ancho-56)+'px');
   const top=h=>(n-1-h)*paso;
   BASE.forEach((b,h)=>{ const e=estratos[b.id]; e.style.top=top(h)+'px'; e.style.width=ancho+'px'; e.style.height=alto+'px';
     const c=fotos[b.id].c, lado=na?c[2]:c[0], li=rotulos[b.id];
     li.style.top=(top(h)+lado[1]*alto)+'px'; li.style.setProperty('--x',(lado[0]*ancho)+'px'); });
-  // guías punteadas en las esquinas izquierda y derecha
   const c0=fotos[BASE[0].id].c, gs=pila.querySelector('.pila__guias'); gs.setAttribute('width',ancho); gs.setAttribute('height',altoPila);
   gs.innerHTML=[c0[0],c0[2]].map(p=>`<line x1="${p[0]*ancho}" x2="${p[0]*ancho}" y1="${top(n-1)+p[1]*alto-18}" y2="${top(0)+p[1]*alto+26}"/>`).join('');
   requestAnimationFrame(trazar);
@@ -383,49 +393,60 @@ function medir(){
 
 // filamentos con degradado del color de origen al de destino
 const NS='http://www.w3.org/2000/svg';
+function sinLevante(el){ const t=getComputedStyle(el).transform; return t&&t!=='none'?parseFloat(t.split(',')[5])||0:0; }
 function ancla(id){
   const R=red.getBoundingClientRect();
-  if(esBase(id)){ const e=estratos[id], r=e.getBoundingClientRect(), c=fotos[id].c;
-    const ty=parseFloat(getComputedStyle(e).transform.split(',')[5])||0;   // sin el levantamiento del hover
+  if(esBase(id)){ const e=estratos[id], r=e.getBoundingClientRect(), c=fotos[id].c, ty=sinLevante(e);
     return {salida:[r.left-R.left+c[2][0]*r.width, r.top-ty-R.top+c[2][1]*r.height]}; }
-  const img=id===FIN?sintesis.querySelector('img'):nodos[id].querySelector('img'), r=img.getBoundingClientRect(), c=fotos[id].c;
-  const el=id===FIN?sintesis:nodos[id], ty=parseFloat(getComputedStyle(el).transform.split(',')[5])||0;
+  const el=nodos[id], img=el.querySelector('img'), r=img.getBoundingClientRect(), c=fotos[id].c, ty=sinLevante(el);
   return {entrada:[r.left-R.left+c[0][0]*r.width, r.top-ty-R.top+c[0][1]*r.height], salida:[r.left-R.left+c[2][0]*r.width, r.top-ty-R.top+c[2][1]*r.height]};
 }
 function trazar(){
   if(angosta()){svg.innerHTML='';return;}
-  const A={}; [...BASE.map(b=>b.id),...IDX.map(d=>d.id),FIN].forEach(id=>A[id]=ancla(id)); anclas=A;
+  const A={}; [...BASE.map(b=>b.id),...IDX.map(d=>d.id)].forEach(id=>A[id]=ancla(id));
   let defs='', g='';
-  ENL.forEach(e=>{ const V=A[e.desde].salida, I=A[e.hacia].entrada, k=clave(e).replace('>','-'), O=Math.max(40,(I[0]-V[0])*.5);
+  ENL.forEach((e,k)=>{ const V=A[e.desde].salida, I=A[e.hacia].entrada, id=clave(e).replace('>','-'), O=Math.max(40,(I[0]-V[0])*.5);
     const d=`M${V[0].toFixed(1)},${V[1].toFixed(1)} C${(V[0]+O).toFixed(1)},${V[1].toFixed(1)} ${(I[0]-O).toFixed(1)},${I[1].toFixed(1)} ${I[0].toFixed(1)},${I[1].toFixed(1)}`;
-    defs+=`<linearGradient id="g-${k}" gradientUnits="userSpaceOnUse" x1="${V[0]}" y1="${V[1]}" x2="${I[0]}" y2="${I[1]}"><stop offset="0" stop-color="${firma(e.desde)}"/><stop offset="1" stop-color="${e.hacia===FIN?'#cfff5e':firma(e.hacia)}"/></linearGradient>`;
-    g+=`<g class="flujo" data-k="${clave(e)}" data-estado="reposo"${e.via?' data-via=""':''}><path class="flujo__trazo" d="${d}" stroke="url(#g-${k})"/></g>`; });
+    defs+=`<linearGradient id="g-${id}" gradientUnits="userSpaceOnUse" x1="${V[0]}" y1="${V[1]}" x2="${I[0]}" y2="${I[1]}"><stop offset="0" stop-color="${firma(e.desde)}"/><stop offset="1" stop-color="${firma(e.hacia)}"/></linearGradient>`;
+    g+=`<g class="flujo" data-k="${clave(e)}" data-estado="reposo"${e.via?' data-via=""':''}><path class="flujo__trazo" d="${d}" stroke="url(#g-${id})"/><path class="flujo__chispa" d="${d}" stroke="url(#g-${id})" style="--k:${k}"/></g>`; });
   svg.innerHTML=`<defs>${defs}</defs>${g}`;
+  svg.querySelectorAll('.flujo__chispa').forEach(p=>{const L=p.getTotalLength();p.style.strokeDasharray=`${Math.min(60,L*.25)} ${L+80}`;p.style.setProperty('--len',L+60);});
   pintar();
 }
 
 // estados (misma lógica que el referente)
 function pasar(id){hover=id; pintar();}
-function elegir(id){fijo=fijo===id?null:id; pintar();}
+function elegir(id){fijo=fijo===id?null:id; detenerRecorrido(); pintar();}
 function pintar(){
-  const F=hover??fijo, rel=F?relaciones(F):null, activo=hover&&esBase(hover)?hover:null;
+  if(!red)return;
+  const H=hover??(auto&&auto.id), F=H??fijo, rel=F?relaciones(F):null, activo=H&&esBase(H)?H:null;
   BASE.forEach((b,h)=>{ let st;
-    if(activo===b.id)st='activo'; else if(!hover&&fijo===b.id)st='seleccionado';
+    if(activo===b.id)st='activo'; else if(!H&&fijo===b.id)st='seleccionado';
     else if(rel)st=rel.nodos.get(b.id)??'atenuado'; else st='reposo';
-    if(st==='foco')st=hover===b.id?'activo':'seleccionado';
+    if(st==='foco')st=H===b.id?'activo':'seleccionado';
     estratos[b.id].dataset.estado=st; rotulos[b.id].dataset.estado=st;
     estratos[b.id].style.zIndex=(st==='activo'||st==='seleccionado')?BASE.length+5:h+1; });
   IDX.forEach(d=>{ nodos[d.id].dataset.estado=rel?(rel.nodos.get(d.id)??'atenuado'):'reposo'; nodos[d.id].setAttribute('aria-pressed',fijo===d.id); });
-  sintesis.dataset.estado=rel?(rel.nodos.get(FIN)??'atenuado'):'reposo';
   svg.querySelectorAll('.flujo').forEach(gr=>{
     const st=rel?(rel.enlaces.get(gr.dataset.k)??'atenuado'):'reposo'; gr.dataset.estado=st;
     const p=gr.querySelector('.flujo__pulso');
     if(st==='directo'&&!p){ const q=document.createElementNS(NS,'path'); q.setAttribute('class','flujo__pulso'); q.setAttribute('d',gr.firstChild.getAttribute('d')); gr.appendChild(q); }
     else if(st!=='directo'&&p)p.remove(); });
+  // pista: qué se está leyendo
+  if(F){ const d=IDX.find(x=>x.id===F);
+    pista.style.setProperty('--firma',firma(F));
+    pista.innerHTML=d?`<b>${d.id}</b> ${d.n} ← ${d.in.map(nombre).join(' · ')}`:`<b>${nombre(F)}</b> entra en ${IDX.filter(x=>x.in.includes(F)).map(x=>x.id).join(' · ')||'—'}`; }
+  else pista.innerHTML=auto?'':'Pase el cursor por los picos';
 }
+// recorrido automático: va encendiendo cada cruce hasta que alguien mueve el cursor
+const ORDEN=['SE','IC','CCL','PA','PM','OC','CO','EPO','CV'];
+function iniciarRecorrido(){ if(angosta()||hover||fijo||matchMedia('(prefers-reduced-motion:reduce)').matches)return; auto={i:0,id:ORDEN[0]}; pintar(); paso(); }
+function paso(){ auto.t=setTimeout(()=>{ if(!auto)return; auto.i=(auto.i+1)%ORDEN.length; auto.id=ORDEN[auto.i]; pintar(); paso(); },2600); }
+function detenerRecorrido(){ if(auto){clearTimeout(auto.t);auto=null;pintar();} }
+function reanudar(){ clearTimeout(reanudar.t); reanudar.t=setTimeout(()=>{ if(!hover&&!fijo&&red.hasAttribute('data-visto'))iniciarRecorrido(); },6000); }
 addEventListener('keydown',e=>{if(e.key==='Escape'){fijo=null;pintar();}});
 
-generar().then(construir).catch(e=>{console.error(e);const c=document.getElementById('cargando');if(c)c.textContent='No se pudieron cargar las capas';});
+cargar().then(construir).catch(e=>{console.error(e);const c=document.getElementById('cargando');if(c)c.textContent='No se pudieron cargar las capas';});
 </script>
 </body>
 </html>
