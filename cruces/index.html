@@ -263,17 +263,18 @@ async function generarPicos(){
     x.drawImage(hi,0,0);const hd=x.getImageData(0,0,w,h).data; x.clearRect(0,0,w,h);x.drawImage(ci,0,0);const cd=x.getImageData(0,0,w,h).data;
     const pc=document.createElement('canvas');pc.width=w;pc.height=h;const px=pc.getContext('2d'),pim=px.createImageData(w,h);
     let r=0,g=0,b=0,k=0;
-    // colores apagados como el referente: se mezcla cada color con su gris (55 % de saturación)
-    for(let q=0;q<w*h*4;q+=4){ const Y=.3*cd[q]+.59*cd[q+1]+.11*cd[q+2];
-      for(let j=0;j<3;j++){ cd[q+j]=Y+(cd[q+j]-Y)*.55; pim.data[q+j]=Math.min(255,14+cd[q+j]*.4); } pim.data[q+3]=255; if(hd[q]>200){r+=cd[q];g+=cd[q+1];b+=cd[q+2];k++;} }
+    // colores algo apagados como el referente (72 % de saturación); en los índices la placa se oscurece donde el valor es bajo
+    const esIndice=id.startsWith('i_');
+    for(let q=0;q<w*h*4;q+=4){ const Y=.3*cd[q]+.59*cd[q+1]+.11*cd[q+2], luz=esIndice?.12+.88*Math.pow(hd[q]/255,.8):1;
+      for(let j=0;j<3;j++){ cd[q+j]=Y+(cd[q+j]-Y)*.72; pim.data[q+j]=Math.min(255,14+cd[q+j]*.42*luz); } pim.data[q+3]=255; if(hd[q]>200){r+=cd[q];g+=cd[q+1];b+=cd[q+2];k++;} }
     px.putImageData(pim,0,0);
-    return {w,h,hd,cd,plate:pc,firma:k?'#'+[r,g,b].map(v=>Math.round(v/k).toString(16).padStart(2,'0')).join(''):'#9aa0a8'};
+    return {w,h,hd,cd,plate:pc,min:esIndice?.12:.035,firma:k?'#'+[r,g,b].map(v=>Math.round(v/k).toString(16).padStart(2,'0')).join(''):'#9aa0a8'};
   }
   function grupoCapa(L,Hh){
     const g=new THREE.Group(), tex=new THREE.CanvasTexture(L.plate); tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
     const pl=new THREE.Mesh(new THREE.PlaneGeometry(2*W,2*H),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide})); pl.rotation.x=-Math.PI/2; g.add(pl);
     const P=[],C=[];
-    for(let r=0;r<L.h;r++)for(let c=0;c<L.w;c++){ const k=(r*L.w+c)*4, v=L.hd[k]/255; if(v<0.035)continue;
+    for(let r=0;r<L.h;r++)for(let c=0;c<L.w;c++){ const k=(r*L.w+c)*4, v=L.hd[k]/255; if(v<L.min)continue;
       const x=-W+(c+.5)/L.w*2*W, z=-H+(r+.5)/L.h*2*H, R=L.cd[k]/255,G=L.cd[k+1]/255,B=L.cd[k+2]/255;
       P.push(x,0.3,z,x,0.3+v*Hh,z); C.push(R*.16,G*.16,B*.16,Math.min(1,R*.82+.16),Math.min(1,G*.82+.16),Math.min(1,B*.82+.16)); }   // punta clara, raíz oscura
     const ng=new THREE.BufferGeometry(); ng.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); ng.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
@@ -296,7 +297,7 @@ async function generarPicos(){
   for(const k in meta){ const r=meta[k].ramp; let best=r[r.length-1],bs=-1;
     for(const h of r){const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255),mx=Math.max(...c),mn=Math.min(...c); if((mx-mn)*mx>bs){bs=(mx-mn)*mx;best=h;}}
     const c=[1,3,5].map(i=>parseInt(best.slice(i,i+2),16)), Y=.3*c[0]+.59*c[1]+.11*c[2];
-    firmas[k]='#'+c.map(v=>Math.round(Y+(v-Y)*.72).toString(16).padStart(2,'0')).join(''); }
+    firmas[k]='#'+c.map(v=>Math.round(Y+(v-Y)*.85).toString(16).padStart(2,'0')).join(''); }
   const lote=[...BASE.map(b=>[b.id,b.id,46,560]),...IDX.map(d=>[d.id,'i_'+d.id.toLowerCase(),62,CRU.includes(d)?720:460])];
   for(const [k,src,nh,px] of lote){ const L=await cargarCapa(src); if(esBase(k))firmas[k]=L.firma;
     const s=new THREE.Scene(); s.add(grupoCapa(L,nh)); fotos[k]=foto(s,[...esquinas(0),...esquinas(nh)],px); liberar(s); }
