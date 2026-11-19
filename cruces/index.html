@@ -179,18 +179,9 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   <section class="genealogia" id="genealogia" aria-labelledby="titulo-genealogia">
     <header class="genealogia__cabeza">
       <h2 id="titulo-genealogia">De 18 capas a 9 índices</h2>
-      <p>Cada filamento es una relación de las fórmulas de la presentación. Pase el cursor por una capa o un índice para ver qué mapas lo producen; haga clic para fijarlo.</p>
-      <ul class="operadores">
-        <li><span class="operadores__simbolo">(x+y+z)/3</span> media: suman por igual</li>
-        <li><span class="operadores__simbolo">(x+y)−z</span> una condición resta</li>
-        <li><span class="operadores__simbolo">x·y</span> alto solo si ambas lo son</li>
-        <li><span class="operadores__simbolo">x·((y+z)/2)</span> ponderado por población</li>
-      </ul>
-      <p class="pista" id="pista"></p>
     </header>
     <div id="cargando"><div>Levantando picos<i></i></div></div>
   </section>
-  <p class="pie">Capas base de la presentación «Kennedy»: índices espectrales (Sentinel-2, Landsat-8), capas prediales y de servicios (SHP &amp; QGIS) y concentración de gases. La altura de cada pico es el valor normalizado 0–1 de la capa en blanco y negro; el color es el de su mapa original. Los picos de los índices vienen de las mismas mallas del visor 3D.</p>
 </main>
 
 <script>
@@ -318,7 +309,7 @@ async function generarPicos(){
 }
 
 // ================= interfaz =================
-const sec=document.getElementById('genealogia'), pista=document.getElementById('pista');
+const sec=document.getElementById('genealogia');
 let red, svg, pila, estratos={}, rotulos={}, nodos={}, sintesis;
 let hover=null, fijo=null, auto=null;
 const angosta=()=>innerWidth<980;
@@ -354,14 +345,13 @@ function construir(){
   [COL_A,COL_B].forEach((lista,ci)=>{ const c=document.createElement('div'); c.className='red__columna'; ind.appendChild(c); lista.forEach((d,n)=>c.appendChild(nodoHTML(d,'',n+ci*4))); });
   const rs=document.createElement('div'); rs.className='red__sintesis'; red.appendChild(rs);
   sintesis=document.createElement('div'); sintesis.className='sintesis';
-  sintesis.innerHTML=`<h3 class="sintesis__titulo">Índices compuestos</h3><p class="sintesis__prueba">Segundo cruce · EPO multiplica la actividad comercial por la población; CV la pondera con la industria pesada.</p><div class="variantes"></div>`;
+  sintesis.innerHTML=`<h3 class="sintesis__titulo">Índices compuestos</h3><div class="variantes"></div>`;
   CRU.forEach((d,n)=>sintesis.querySelector('.variantes').appendChild(nodoHTML(d,'variante',n)));
   rs.appendChild(sintesis);
   medir(); addEventListener('resize',()=>{clearTimeout(medir.t);medir.t=setTimeout(medir,80);});
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(medir);
-  const io=new IntersectionObserver(es=>{ if(es[es.length-1].isIntersecting){ red.setAttribute('data-visto',''); io.disconnect(); setTimeout(iniciarRecorrido,3600); } },{rootMargin:'0px 0px -20% 0px'});
+  const io=new IntersectionObserver(es=>{ if(es[es.length-1].isIntersecting){ red.setAttribute('data-visto',''); io.disconnect(); } },{rootMargin:'0px 0px -20% 0px'});
   io.observe(red);
-  red.addEventListener('pointerenter',detenerRecorrido); red.addEventListener('pointerleave',()=>{clearTimeout(auto&&auto.t);reanudar();});
 }
 
 // tamaños: la red cabe en el alto de la pantalla (como el referente)
@@ -432,18 +422,8 @@ function pintar(){
     const p=gr.querySelector('.flujo__pulso');
     if(st==='directo'&&!p){ const q=document.createElementNS(NS,'path'); q.setAttribute('class','flujo__pulso'); q.setAttribute('d',gr.firstChild.getAttribute('d')); gr.appendChild(q); }
     else if(st!=='directo'&&p)p.remove(); });
-  // pista: qué se está leyendo
-  if(F){ const d=IDX.find(x=>x.id===F);
-    pista.style.setProperty('--firma',firma(F));
-    pista.innerHTML=d?`<b>${d.id}</b> ${d.n} ← ${d.in.map(nombre).join(' · ')}`:`<b>${nombre(F)}</b> entra en ${IDX.filter(x=>x.in.includes(F)).map(x=>x.id).join(' · ')||'—'}`; }
-  else pista.innerHTML=auto?'':'Pase el cursor por los picos';
 }
-// recorrido automático: va encendiendo cada cruce hasta que alguien mueve el cursor
-const ORDEN=['SE','IC','CCL','PA','PM','OC','CO','EPO','CV'];
-function iniciarRecorrido(){ if(angosta()||hover||fijo||matchMedia('(prefers-reduced-motion:reduce)').matches)return; auto={i:0,id:ORDEN[0]}; pintar(); paso(); }
-function paso(){ auto.t=setTimeout(()=>{ if(!auto)return; auto.i=(auto.i+1)%ORDEN.length; auto.id=ORDEN[auto.i]; pintar(); paso(); },2600); }
-function detenerRecorrido(){ if(auto){clearTimeout(auto.t);auto=null;pintar();} }
-function reanudar(){ clearTimeout(reanudar.t); reanudar.t=setTimeout(()=>{ if(!hover&&!fijo&&red.hasAttribute('data-visto'))iniciarRecorrido(); },6000); }
+function detenerRecorrido(){}
 addEventListener('keydown',e=>{if(e.key==='Escape'){fijo=null;pintar();}});
 
 cargar().then(construir).catch(e=>{console.error(e);const c=document.getElementById('cargando');if(c)c.textContent='No se pudieron cargar las capas';});
