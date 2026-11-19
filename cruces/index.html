@@ -206,12 +206,12 @@ const BASE=[
 ];
 // primer cruce en dos columnas (como «dimensiones» y «cruces» del referente)
 const COL_A=[
-  {id:'SE', n:'Soporte ecológico', in:['ndvi','ndmi','eep'], f:'(NDVI + NDMI + EEP) / 3'},
   {id:'IC', n:'Islas de calor', in:['flir','ndbi','ndvi'], f:'(FLIR + NDBI) − NDVI'},
   {id:'CCL',n:'Concentración comercial y logística', in:['icom','ndbi','flir'], f:'(Int. comercial + NDBI + FLIR) / 3'},
   {id:'PA', n:'Presión sobre el aire', in:['no2','co_g','ch4'], f:'(NO₂ + CO + CH₄) / 3'},
 ];
 const COL_B=[
+  {id:'EPO',n:'Exposición poblacional', in:['CCL','dens'], f:'CCL × Densidad poblacional'},
   {id:'PM', n:'Presión sobre la movilidad', in:['no2','malla','acc'], f:'(NO₂ + Malla vial + Accidentalidad) / 3'},
   {id:'OC', n:'Organizaciones comunitarias', in:['jac','eqc'], f:'(JAC + Equipamientos) / 2'},
   {id:'CO', n:'Densidad del conocimiento', in:['col','edu','bib'], f:'(Colegios + Ed. superior) − Bibliored'},
@@ -219,7 +219,7 @@ const COL_B=[
 const DIM=[...COL_A,...COL_B];
 // segundo cruce: la columna final (en el referente, las dos variantes de la síntesis)
 const CRU=[
-  {id:'EPO',n:'Exposición poblacional', in:['CCL','dens'], f:'EPO = CCL × Densidad poblacional'},
+  {id:'SE', n:'Soporte ecológico', in:['ndvi','ndmi','eep'], f:'SE = (NDVI + NDMI + EEP) / 3'},
   {id:'CV', n:'Conflicto vivienda-actividad', in:['dens','icom','ind'], f:'CV = Densidad × ((Int. comercial + Industria) / 2)'},
 ];
 const IDX=[...DIM,...CRU];
@@ -248,7 +248,8 @@ async function cargar(){
   const j=await fetch('picos.json').then(r=>r.json());
   Object.assign(firmas,j.firmas);
   for(const k in j.fotos) fotos[k]={...j.fotos[k],url:'picos/'+j.fotos[k].f};
-  await Promise.all(Object.values(fotos).map(f=>{const i=new Image();i.src=f.url;return i.decode().catch(()=>{});}));
+  const pre=Promise.all(Object.values(fotos).map(f=>new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=f.url;})));
+  await Promise.race([pre,new Promise(r=>setTimeout(r,4000))]);
 }
 async function generarPicos(){
   await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
@@ -353,6 +354,7 @@ function construir(){
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(medir);
   const io=new IntersectionObserver(es=>{ if(es[es.length-1].isIntersecting){ red.setAttribute('data-visto',''); io.disconnect(); } },{rootMargin:'0px 0px -20% 0px'});
   io.observe(red);
+  setTimeout(()=>{ if(red.getBoundingClientRect().top<innerHeight){ red.setAttribute('data-visto',''); io.disconnect(); } },1200);   // respaldo
 }
 
 // tamaños: la red cabe en el alto de la pantalla (como el referente)
@@ -360,9 +362,9 @@ function medir(){
   const vw=innerWidth, vh=innerHeight, na=angosta(), y=Math.min(1560,vw-(na?32:80)), n=BASE.length;
   const cab=sec.querySelector('.genealogia__cabeza').getBoundingClientRect().height;
   const altoMax=na?0:Math.max(500,Math.min(780,vh-64-cab-40));
-  const xn=fotos[BASE[0].id].ch/fotos[BASE[0].id].cw, xnI=fotos.SE.ch/fotos.SE.cw;
+  const xn=fotos[BASE[0].id].ch/fotos[BASE[0].id].cw, xnI=fotos.IC.ch/fotos.IC.cw;
   let ancho=na?Math.min(y*(vw<=380?.5:.56),360):Math.max(190,Math.min(260,y*.165));
-  let g=na?Math.min(220,(y-24)/2):Math.max(120,Math.min(175,(altoMax/COL_A.length-62)/xnI));
+  let g=na?Math.min(220,(y-24)/2):Math.max(120,Math.min(175,(altoMax/Math.max(COL_A.length,COL_B.length)-62)/xnI));
   const alto=ancho*xn;
   const paso=na?(vw<=720?30:26):Math.max(14,(altoMax-alto)/(n-1));
   red.classList.toggle('red--angosta',na);
@@ -371,7 +373,7 @@ function medir(){
   pila.style.width=ancho+'px'; pila.style.height=altoPila+'px';
   red.style.setProperty('--ancho-nodo',g+'px'); red.style.setProperty('--ancho-pila',ancho+'px');
   red.style.setProperty('--ancho-indices',(g*2+56)+'px'); red.style.setProperty('--alto-pila',altoPila+'px');
-  const libre=y-(ancho+250)-(g*2+56)-2*56; red.style.setProperty('--ancho-ct',Math.max(240,Math.min(g*1.9,libre,(altoMax-130)/2/(fotos.EPO.ch/fotos.EPO.cw)*0.95))+'px');
+  const libre=y-(ancho+250)-(g*2+56)-2*56; red.style.setProperty('--ancho-ct',Math.max(240,Math.min(g*1.9,libre,(altoMax-130)/2/(fotos[CRU[0].id].ch/fotos[CRU[0].id].cw)*0.95))+'px');
   if(na) pila.style.setProperty('--rotulo-max',Math.max(80,y-fotos[BASE[0].id].c[2][0]*ancho-56)+'px');
   const top=h=>(n-1-h)*paso;
   BASE.forEach((b,h)=>{ const e=estratos[b.id]; e.style.top=top(h)+'px'; e.style.width=ancho+'px'; e.style.height=alto+'px';
