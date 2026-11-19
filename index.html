@@ -233,7 +233,7 @@
       <label>Intensidad del viento <span id="vW">1.0</span></label>
       <input id="sW" type="range" min="0" max="2.5" step="0.1" value="1">
       <label class="chk"><input type="checkbox" id="multi"> Ver varios a la vez (sobre el territorio)</label>
-      <label class="chk"><input type="checkbox" id="terr"> Territorio 3D (edificios y terreno)</label>
+      <label class="chk"><input type="checkbox" id="terr" checked> Territorio 3D (edificios y terreno)</label>
       <label class="chk"><input type="checkbox" id="orbit" checked> Orbitar automáticamente</label>
       <label class="chk"><input type="checkbox" id="shade" checked> Sombreado suave tipo Rhino</label>
       <label class="chk"><input type="checkbox" id="wire"> Ver malla (wireframe)</label>
@@ -327,7 +327,7 @@ function dec(b){const s=atob(b),u=new Uint8Array(s.length);for(let i=0;i<s.lengt
 
 // ---------- TERRITORIO 3D ----------
 const terr=new THREE.Group(); terr.rotation.x=-Math.PI/2; scene.add(terr);
-let tzArr=null; terr.visible=false;
+let tzArr=null;
 function terrainH(xs,ys){            // altura del terreno (unidades de escena) bajo un punto
   const c=TER.c,r=TER.r;
   let gx=((xs/S+XM)/(2*XM))*(c-1), gy=((ys/S+YM)/(2*YM))*(r-1);
@@ -485,9 +485,12 @@ function build(i){
   hair.rotation.x=-Math.PI/2; hair.frustumCulled=false;
 
   const grp=new THREE.Group(); grp.add(mesh); grp.add(hair); grp.visible=false; scene.add(grp);
-  const plate=new THREE.Group(), ptex=new THREE.TextureLoader().load(d.plan,()=>{dirty=true;});
-  ptex.anisotropy=renderer.capabilities.getMaxAnisotropy(); ptex.minFilter=THREE.LinearMipmapLinearFilter;
-  const bp=new THREE.Mesh(new THREE.PlaneGeometry(2*XM*S,2*YM*S),new THREE.MeshBasicMaterial({map:ptex,color:0x9a9a9a,side:THREE.DoubleSide}));
+  const pg2=new THREE.BufferGeometry(), pf=new Float32Array(n*3), pc=new Float32Array(n*3);
+  for(let k=0;k<n;k++){pf[k*3]=pos[k*3];pf[k*3+1]=pos[k*3+1];pf[k*3+2]=0; pc[k*3]=col[k*3]*.5;pc[k*3+1]=col[k*3+1]*.5;pc[k*3+2]=col[k*3+2]*.5;}
+  pg2.setAttribute('position',new THREE.BufferAttribute(pf,3)); pg2.setAttribute('color',new THREE.BufferAttribute(pc,3)); pg2.setIndex(new THREE.BufferAttribute(idx,1));
+  const plate=new THREE.Group(), pm=new THREE.Mesh(pg2,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1}));
+  pm.rotation.x=-Math.PI/2; pm.position.y=0.25; pm.frustumCulled=false; plate.add(pm);
+  const bp=new THREE.Mesh(new THREE.PlaneGeometry(2*XM*S,2*YM*S),new THREE.MeshBasicMaterial({color:0x1d2120,side:THREE.DoubleSide}));
   bp.rotation.x=-Math.PI/2; bp.position.y=0.05; plate.add(bp);
   const be=new THREE.LineSegments(new THREE.EdgesGeometry(bp.geometry),new THREE.LineBasicMaterial({color:0x5a6360})); be.rotation.x=-Math.PI/2; be.position.y=0.3; plate.add(be);
   plate.visible=false; grp.add(plate);
@@ -763,10 +766,10 @@ function renderFrame(){
 function tick(){
   requestAnimationFrame(tick); T=performance.now()/1000; TECHU.uT.value=T;
   const techOn=modeSel.value==='tech'||modeSel.value==='needle', needle=modeSel.value==='needle';
-  const sk=stackMode?0.6:(needle?0.5:1); if(stackK!==sk){ stackK+=(sk-stackK)*0.12; if(Math.abs(stackK-sk)<0.003)stackK=sk; dirty=true; }
+  const sk=stackMode?0.6:1; if(stackK!==sk){ stackK+=(sk-stackK)*0.12; if(Math.abs(stackK-sk)<0.003)stackK=sk; dirty=true; }
   ind.forEach(o=>{
     if(!o.group)return;
-    const target=o.on?1:0; o.t+=(target-o.t)*(o.on?0.1:0.3); if(Math.abs(o.t-target)<0.002)o.t=target;
+    const target=o.on?1:0; o.t+=(target-o.t)*0.1; if(Math.abs(o.t-target)<0.002)o.t=target;
     const goal=stackMode?o.base*gap:0; o.off+=(goal-o.off)*0.12; if(Math.abs(o.off-goal)<0.05)o.off=goal;
     o.group.position.y=o.off;
     o.label.position.y=stackMode?30:30+o.base*22;
@@ -777,7 +780,7 @@ function tick(){
     o.lastT=o.t;
     o.vis=o.on||o.t>0.005;
     o.label.visible=o.on&&o.t>0.05&&!cmpState&&!PHONE()&&!stackMode;
-    o.plate.visible=needle&&o.on&&(stackMode||!terr.visible);   // en celular el nombre va en la escala, no sobre el 3D
+    o.plate.visible=needle&&(stackMode||!terr.visible);   // en celular el nombre va en la escala, no sobre el 3D
     const pinOn=techOn&&o.on&&o.t>0.6&&!stackMode, sc=hMul*o.t*stackK;
     o.pins.forEach((pg,j)=>{ pg.visible=pinOn; if(!pinOn)return; const k=pg.userData.k;
       pg.position.y=o.tb[k]+lift+o.z[k]*o.zs*sc+0.4; pg.userData.dot.rotation.y=T*1.2+j;
