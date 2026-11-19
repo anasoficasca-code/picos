@@ -41,9 +41,8 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .red__indices{display:grid;grid-template-columns:repeat(2,var(--ancho-nodo));column-gap:56px;height:var(--alto-pila)}
 .red__columna{display:flex;flex-direction:column;justify-content:space-around;gap:10px}
 .red__columna:nth-child(2){justify-content:space-evenly}
-.red__flujos{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0;transition:clip-path 1.6s var(--curva-mover) .35s}
-.flujo__trazo{fill:none;stroke-width:1;opacity:.2;transition:opacity var(--t-medio) var(--curva-suave),stroke-width var(--t-medio) var(--curva)}
-.flujo[data-via] .flujo__trazo{stroke-dasharray:3 4}
+.red__flujos{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+.flujo__trazo{fill:none;stroke-width:1;opacity:.2}
 .flujo[data-estado=directo] .flujo__trazo{opacity:.95;stroke-width:1.7}
 .flujo[data-estado=indirecto] .flujo__trazo{opacity:.4}
 .flujo[data-estado=atenuado] .flujo__trazo{opacity:.035}
@@ -129,8 +128,6 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 @keyframes velar{0%{opacity:0}}
 @keyframes surgir{0%{opacity:0;translate:-16px 0;filter:blur(4px)}}
 @keyframes crecer{0%{opacity:0;transform:translateY(7%) scaleY(.18)}60%{opacity:1}}
-.red:not([data-visto]) .red__flujos{clip-path:inset(-40px 100% -40px -40px)}
-.red[data-visto] .red__flujos{clip-path:inset(-40px -40px -40px -40px)}
 .red:not([data-visto]) :is(.estrato,.rotulo__boton,.nodo,.sintesis){opacity:0}
 .red[data-visto] .red__bases .estrato{animation:velar .7s var(--curva-suave) backwards;animation-delay:calc(var(--i) * 30ms)}
 .red[data-visto] .estrato__relieve{animation:crecer 1.1s var(--curva) backwards;animation-delay:calc(.15s + var(--i) * 40ms)}
@@ -398,9 +395,8 @@ function trazar(){
   ENL.forEach((e,k)=>{ const V=A[e.desde].salida, I=A[e.hacia].entrada, id=clave(e).replace('>','-'), O=Math.max(40,(I[0]-V[0])*.5);
     const d=`M${V[0].toFixed(1)},${V[1].toFixed(1)} C${(V[0]+O).toFixed(1)},${V[1].toFixed(1)} ${(I[0]-O).toFixed(1)},${I[1].toFixed(1)} ${I[0].toFixed(1)},${I[1].toFixed(1)}`;
     defs+=`<linearGradient id="g-${id}" gradientUnits="userSpaceOnUse" x1="${V[0]}" y1="${V[1]}" x2="${I[0]}" y2="${I[1]}"><stop offset="0" stop-color="${firma(e.desde)}"/><stop offset="1" stop-color="${firma(e.hacia)}"/></linearGradient>`;
-    g+=`<g class="flujo" data-k="${clave(e)}" data-estado="reposo"${e.via?' data-via=""':''}><path class="flujo__trazo" d="${d}" stroke="url(#g-${id})"/><path class="flujo__chispa" d="${d}" stroke="url(#g-${id})" style="--k:${k}"/></g>`; });
+    g+=`<g class="flujo" data-k="${clave(e)}" data-estado="reposo"${e.via?' data-via=""':''}><path class="flujo__trazo" d="${d}" stroke="url(#g-${id})"/></g>`; });
   svg.innerHTML=`<defs>${defs}</defs>${g}`;
-  svg.querySelectorAll('.flujo__chispa').forEach(p=>{const L=p.getTotalLength();p.style.strokeDasharray=`${Math.min(60,L*.25)} ${L+80}`;p.style.setProperty('--len',L+60);});
   pintar();
 }
 
@@ -419,9 +415,7 @@ function pintar(){
   IDX.forEach(d=>{ nodos[d.id].dataset.estado=rel?(rel.nodos.get(d.id)??'atenuado'):'reposo'; nodos[d.id].setAttribute('aria-pressed',fijo===d.id); });
   svg.querySelectorAll('.flujo').forEach(gr=>{
     const st=rel?(rel.enlaces.get(gr.dataset.k)??'atenuado'):'reposo'; gr.dataset.estado=st;
-    const p=gr.querySelector('.flujo__pulso');
-    if(st==='directo'&&!p){ const q=document.createElementNS(NS,'path'); q.setAttribute('class','flujo__pulso'); q.setAttribute('d',gr.firstChild.getAttribute('d')); gr.appendChild(q); }
-    else if(st!=='directo'&&p)p.remove(); });
+    });
 }
 function detenerRecorrido(){}
 addEventListener('keydown',e=>{if(e.key==='Escape'){fijo=null;pintar();}});
