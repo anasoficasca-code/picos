@@ -206,6 +206,8 @@
   #stats .lay span{display:inline-flex;align-items:center;gap:6px;border:1px solid #262626;border-radius:4px;padding:3px 7px;color:#d8d8d8;letter-spacing:.04em}
   #stats .lay i{width:4px;height:12px;border-radius:1px}
   #play.on{border-color:var(--accEnd);color:#fff}
+  .row a.lnk{flex:1;display:block;text-align:center;padding:9px 8px;border:1px solid #1f2322;border-radius:8px;color:#eaefed;text-decoration:none;font-size:13px}
+  .row a.lnk:hover{border-color:#a9b3af}
   #stk{position:absolute;inset:0;pointer-events:none;z-index:2;display:none}
   #stk svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
   #stk .sl{position:absolute;white-space:nowrap;font:400 11.84px var(--sans);color:var(--mut);transform:translateY(-50%);text-align:right;transition:opacity .3s}
@@ -225,6 +227,7 @@
     <h1>Indicadores en 3D</h1>
     <div id="list"></div>
     <div class="row"><button id="showAll">Mostrar todos (en capas)</button><button id="hideAll">Ocultar todos</button></div>
+    <div class="row"><a class="lnk" href="cruces/">Cruce de capas: cómo se forman los índices →</a></div>
     <div class="row"><button id="play">▶ Recorrido: todos → uno a uno</button><button id="axo">Vista axonométrica 35°</button></div>
     <div class="ctl">
       <label>Visualización de los picos</label>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cruce de capas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400&family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#050607;--ink:#eaefed;--sec:#a9b3af;--mut:#7a8480;--dim:#4f5754;--line:#1a1e1d;
+        --sans:'Geist',ui-sans-serif,system-ui,sans-serif;--mono:'Geist Mono',ui-monospace,'Cascadia Mono',monospace;--cond:'Barlow Condensed','Arial Narrow',ui-sans-serif,sans-serif;color-scheme:dark}
+  *{box-sizing:border-box}
+  html{scrollbar-width:thin;scrollbar-color:#2a2f2d transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit}
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 32px;background:#050607e6;backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  header .loc{font:400 11.8px var(--sans);color:var(--mut)}
+  header .tag{font:400 11.8px var(--mono);color:var(--mut);letter-spacing:.01em}
+  header a.back{font:400 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--sec);text-decoration:none;border:1px solid #262b29;border-radius:999px;padding:7px 14px}
+  header a.back:hover{border-color:var(--sec);color:var(--ink)}
+  .wrap{max-width:1480px;margin:0 auto;padding:0 32px}
+  .intro{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:48px;align-items:end;padding:72px 0 40px}
+  .kick{font:400 11.8px var(--mono);color:var(--mut);letter-spacing:.12em;text-transform:uppercase;margin:0 0 18px}
+  h1{font:300 clamp(48px,7vw,96px)/.92 var(--cond);text-transform:uppercase;letter-spacing:.01em;margin:0}
+  .intro p{font:400 15px/1.6 var(--sans);color:var(--sec);margin:0;max-width:560px}
+  .ops{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin-top:22px;font-size:12.5px;color:var(--mut)}
+  .ops b{font:500 12px var(--mono);color:var(--ink)}
+  .counts{display:flex;gap:40px;margin-top:28px}
+  .counts div{font:400 11px var(--mono);color:var(--mut);letter-spacing:.1em;text-transform:uppercase}
+  .counts b{display:block;font:300 44px/1 var(--cond);color:var(--ink);letter-spacing:0;margin-bottom:6px}
+
+  .cols{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.85fr) minmax(0,.85fr);gap:0 64px;padding:8px 0 10px;border-top:1px solid var(--line)}
+  .cols h2{font:400 11px var(--mono);color:var(--mut);letter-spacing:.12em;text-transform:uppercase;margin:14px 0 0}
+  .cols h2 b{color:var(--ink);font-weight:500;margin-right:8px}
+
+  #dia{position:relative;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.85fr) minmax(0,.85fr);gap:0 64px;padding:24px 0 80px}
+  #wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:1}
+  #wires path{fill:none;stroke-width:1;opacity:.42;transition:opacity .25s,stroke-width .25s}
+  #wires circle{transition:opacity .25s}
+  #dia.focus #wires path{opacity:.06}
+  #dia.focus #wires path.on{opacity:1;stroke-width:1.6}
+  #dia.focus #wires circle{opacity:.15}
+  #dia.focus #wires circle.on{opacity:1}
+
+  .c1{position:relative;z-index:2}
+  .stackbox{position:relative;margin-left:210px}
+  .stackbox img{display:block;width:100%;height:auto}
+  .sl{position:absolute;right:calc(100% + 14px);transform:translateY(-50%);white-space:nowrap;font:400 11.84px var(--sans);color:var(--mut);cursor:default;transition:color .2s}
+  .sl em{font:400 10.5px var(--mono);font-style:normal;color:var(--dim);margin-left:10px}
+  .ld{position:absolute;left:-10px;height:1px;background:#2c3230;pointer-events:none;transition:background .2s}.ld.on{background:#7a8480}
+  .sl.on{color:var(--ink)} .sl.on em{color:var(--sec)}
+
+  .c2,.c3{position:relative;z-index:2;display:flex;flex-direction:column}
+  .c2{justify-content:space-between;gap:14px}
+  .c3{justify-content:space-around;gap:60px}
+  .tile{margin:0;cursor:default}
+  .tile img{display:block;width:100%;height:auto;transition:filter .25s}
+  .tile figcaption{margin-top:-6px;padding-left:4px}
+  .tile .nm{display:flex;align-items:baseline;gap:8px;font:400 15.2px/1.3 var(--sans);color:var(--ink)}
+  .tile .nm b{font:500 12.5px var(--mono);letter-spacing:.02em}
+  .tile .f{font:400 11.5px/1.5 var(--mono);color:var(--sec);margin-top:6px}
+  .tile .d{font:400 11.84px/1.5 var(--sans);color:var(--mut);margin-top:4px;max-width:340px}
+  .tile .in{display:none}
+  #dia.focus .tile:not(.on) img{filter:brightness(.45) saturate(.6)}
+
+  #loading{position:fixed;inset:auto 0 24px 0;margin:auto;width:max-content;font:400 11.5px var(--mono);color:var(--mut);letter-spacing:.08em;text-transform:uppercase;border:1px solid #262b29;border-radius:999px;padding:8px 16px;background:#050607;z-index:30}
+  footer{border-top:1px solid var(--line);padding:22px 0 40px;font:400 11.5px/1.6 var(--sans);color:var(--dim)}
+
+  @media (max-width:1100px){
+    .cols{display:none}
+    #dia{display:block;padding-top:8px}
+    #wires{display:none}
+    .c1{margin-bottom:56px}
+    .stackbox{margin-left:150px}
+    .sl{font-size:10.5px}
+    .c2,.c3{display:grid;grid-template-columns:1fr 1fr;gap:36px 24px}
+    .c3{margin-top:36px;padding-top:28px;border-top:1px solid var(--line)}
+    .c2::before{content:"Primer cruce · 7 índices";grid-column:1/-1;font:400 11px var(--mono);color:var(--mut);letter-spacing:.12em;text-transform:uppercase}
+    .c3::before{content:"Segundo cruce · 2 índices compuestos";grid-column:1/-1;font:400 11px var(--mono);color:var(--mut);letter-spacing:.12em;text-transform:uppercase}
+    .tile .in{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+    .tile .in span{font:400 10.5px var(--mono);color:var(--sec);border:1px solid #262b29;border-radius:4px;padding:2px 6px}
+  }
+  @media (max-width:820px){
+    header{padding:12px 16px}
+    header .loc,header .tag{display:none}
+    .wrap{padding:0 16px}
+    .intro{grid-template-columns:1fr;gap:20px;padding:40px 0 28px}
+    .counts{gap:28px}
+    .counts b{font-size:36px}
+    .stackbox{margin-left:132px}
+    .sl{font-size:9.6px;right:calc(100% + 8px)}
+    .sl em{margin-left:6px;font-size:9px}
+  }
+  @media (max-width:560px){
+    .c2,.c3{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<header>
+  <span class="loc">Kennedy, Bogotá · lectura territorial</span>
+  <span class="tag">capas → índices → índices compuestos</span>
+  <a class="back" href="../">← Visor 3D</a>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <div>
+      <p class="kick">De la capa al índice</p>
+      <h1>Cruce de capas</h1>
+    </div>
+    <div>
+      <p>Cada capa base (sensores remotos, catastro y calidad del aire) se lleva a una escala común de 0 a 1 y se levanta en picos: la altura es el valor y el color es el de su mapa original. Las capas se cruzan con operaciones simples para producir siete índices; dos de ellos se cruzan otra vez para dar los índices compuestos.</p>
+      <div class="ops">
+        <b>(x+y+z)/3</b><span>media: varias evidencias suman por igual</span>
+        <b>(x+y)−z</b><span>diferencia: una condición resta a las otras</span>
+        <b>x·y</b><span>coincidencia: alto solo si ambas condiciones lo son</span>
+      </div>
+      <div class="counts"><div><b>18</b>capas base</div><div><b>07</b>índices</div><div><b>02</b>compuestos</div></div>
+    </div>
+  </section>
+
+  <div class="cols">
+    <h2><b>01</b>Capas base</h2><h2><b>02</b>Primer cruce</h2><h2><b>03</b>Segundo cruce</h2>
+  </div>
+  <section id="dia">
+    <svg id="wires"></svg>
+    <div class="c1"><div class="stackbox" id="stack"></div></div>
+    <div class="c2" id="c2"></div>
+    <div class="c3" id="c3"></div>
+  </section>
+  <footer>Capas base tomadas de la presentación «Kennedy»: índices espectrales (Sentinel-2, Landsat-8), capas prediales y de servicios (SHP &amp; QGIS) y concentración de gases. Índices calculados con las fórmulas de cada lámina; los picos de los índices vienen de las mismas mallas del visor 3D.</footer>
+</main>
+<div id="loading">Generando picos…</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ---------- capas base (de arriba hacia abajo en la pila) ----------
+const BASE=[
+  {id:'eep',  n:'EEP y parques'},
+  {id:'ndvi', n:'Vegetación (NDVI)'},
+  {id:'ndmi', n:'Humedad (NDMI)'},
+  {id:'flir', n:'Térmica infrarroja (FLIR)'},
+  {id:'ndbi', n:'Expansión urbana (NDBI)'},
+  {id:'icom', n:'Intensidad comercial'},
+  {id:'dens', n:'Densidad poblacional'},
+  {id:'ind',  n:'Industria pesada'},
+  {id:'no2',  n:'Dióxido de nitrógeno (NO₂)'},
+  {id:'co_g', n:'Monóxido de carbono (CO)'},
+  {id:'ch4',  n:'Metano (CH₄)'},
+  {id:'malla',n:'Malla vial arterial'},
+  {id:'acc',  n:'Accidentalidad'},
+  {id:'jac',  n:'Organizaciones sociales (JAC)'},
+  {id:'eqc',  n:'Equipamientos comunitarios'},
+  {id:'col',  n:'Colegios y jardines'},
+  {id:'edu',  n:'Educación superior'},
+  {id:'bib',  n:'Equipamientos educativos (Bibliored)'},
+];
+// ---------- índices: fórmulas de la presentación ----------
+const IDX=[
+  {c:'SE', n:'Soporte ecológico', in:['ndvi','ndmi','eep'], f:'(NDVI + NDMI + EEP) / 3', d:'Capacidad ambiental de regulación: vegetación, humedad y estructura ecológica.'},
+  {c:'IC', n:'Islas de calor', in:['flir','ndbi','ndvi'], f:'(FLIR + NDBI) − NDVI', d:'Temperatura superficial alta donde hay poca cobertura vegetal.'},
+  {c:'CCL',n:'Concentración comercial y logística', in:['icom','ndbi','flir'], f:'(Int. comercial + NDBI + FLIR) / 3', d:'Zonas donde coinciden varias evidencias de actividad económica y logística.'},
+  {c:'PA', n:'Presión sobre el aire', in:['no2','co_g','ch4'], f:'(NO₂ + CO + CH₄) / 3', d:'Presencia conjunta de gases como aproximación a distintas fuentes de emisión.'},
+  {c:'PM', n:'Presión sobre la movilidad vehicular', in:['no2','malla','acc'], f:'(NO₂ + Malla vial + Accidentalidad) / 3', d:'Emisiones, vías arteriales y accidentes concentrados en el mismo lugar.'},
+  {c:'OC', n:'Organizaciones comunitarias', in:['jac','eqc'], f:'(JAC + Equipamientos) / 2', d:'Capacidad potencial de organización colectiva en el territorio.'},
+  {c:'CO', n:'Densidad del conocimiento', in:['col','edu','bib'], f:'(Colegios + Ed. superior) − Bibliored', d:'Presencia de equipamientos para generar y transmitir conocimiento.'},
+];
+const IDX2=[
+  {c:'EPO',n:'Exposición poblacional', in:['#CCL','dens'], f:'CCL × Densidad poblacional', d:'Personas potencialmente expuestas a las presiones comerciales y logísticas.'},
+  {c:'CV', n:'Conflicto vivienda-actividad', in:['dens','icom','ind'], f:'Densidad × ((Int. comercial + Industria) / 2)', d:'Coincidencia de vivienda densa con actividades comerciales o pesadas.'},
+];
+
+// ---------- geometría común ----------
+const W=257.6, H=223.4;                      // media placa (unidades = 10 m): 5.15 × 4.47 km
+const EL=32*Math.PI/180, AZ=45*Math.PI/180;
+const DIR=new THREE.Vector3(Math.cos(EL)*Math.sin(AZ),Math.sin(EL),Math.cos(EL)*Math.cos(AZ));
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+renderer.setClearColor(0x000000,0);
+const camera=new THREE.OrthographicCamera(-1,1,1,-1,-5000,5000);
+camera.position.copy(DIR).multiplyScalar(1000); camera.lookAt(0,0,0); camera.updateMatrixWorld();
+
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});}
+async function loadLayer(id){
+  const [hi,ci]=await Promise.all([loadImg('capas/'+id+'_h.png'),loadImg('capas/'+id+'_c.png')]);
+  const w=hi.width,h=hi.height,cv=document.createElement('canvas');cv.width=w;cv.height=h;const x=cv.getContext('2d');
+  x.drawImage(hi,0,0);const hd=x.getImageData(0,0,w,h).data;
+  x.clearRect(0,0,w,h);x.drawImage(ci,0,0);const cd=x.getImageData(0,0,w,h).data;
+  const pc=document.createElement('canvas');pc.width=w;pc.height=h;const px=pc.getContext('2d'),pim=px.createImageData(w,h);
+  for(let k=0;k<w*h*4;k+=4){ for(let j=0;j<3;j++)pim.data[k+j]=Math.min(255,26+cd[k+j]*.6); pim.data[k+3]=255; }
+  px.putImageData(pim,0,0);
+  return {w,h,hd,cd,plate:pc};
+}
+function layerGroup(L,Hh){
+  const g=new THREE.Group(), tex=new THREE.CanvasTexture(L.plate);
+  tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(2*W,2*H),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));
+  pl.rotation.x=-Math.PI/2; g.add(pl);
+  const ed=new THREE.LineSegments(new THREE.EdgesGeometry(pl.geometry),new THREE.LineBasicMaterial({color:0x66706c}));
+  ed.rotation.x=-Math.PI/2; ed.position.y=0.2; g.add(ed);
+  const P=[],C=[];
+  for(let r=0;r<L.h;r++)for(let c=0;c<L.w;c++){
+    const k=(r*L.w+c)*4, v=L.hd[k]/255; if(v<0.035)continue;
+    const x=-W+(c+.5)/L.w*2*W, z=-H+(r+.5)/L.h*2*H;
+    const R=L.cd[k]/255,G=L.cd[k+1]/255,B=L.cd[k+2]/255;
+    P.push(x,0.3,z,x,0.3+v*Hh,z);
+    C.push(R*.22,G*.22,B*.22,Math.min(1,R*1.12+.04),Math.min(1,G*1.12+.04),Math.min(1,B*1.12+.04));
+  }
+  const ng=new THREE.BufferGeometry();
+  ng.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); ng.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
+  g.add(new THREE.LineSegments(ng,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.92})));
+  return g;
+}
+// encuadra la escena con la cámara axonométrica y la convierte en imagen; devuelve proyector a fracciones
+function shoot(scene,pts,pxu){
+  const inv=camera.matrixWorldInverse, v=new THREE.Vector3();
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(const p of pts){v.copy(p).applyMatrix4(inv);x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y);}
+  const m=6; camera.left=x0-m;camera.right=x1+m;camera.top=y1+m;camera.bottom=y0-m;camera.updateProjectionMatrix();
+  const cw=Math.round((x1-x0+2*m)*pxu), ch=Math.round((y1-y0+2*m)*pxu);
+  renderer.setPixelRatio(1); renderer.setSize(cw,ch,false); renderer.render(scene,camera);
+  const url=renderer.domElement.toDataURL('image/png');
+  const proj=p=>{v.copy(p).project(camera);return [(v.x+1)/2,(1-v.y)/2];};
+  return {url,proj,cw,ch};
+}
+function corners(y){return [[-W,-H],[W,-H],[W,H],[-W,H]].map(([x,z])=>new THREE.Vector3(x,y,z));}
+function sideCorners(y,proj){ const cs=corners(y).map(p=>proj(p)); cs.sort((a,b)=>a[0]-b[0]); return {L:cs[0],R:cs[3]}; }
+
+// ---------- construcción ----------
+const anchors={};                       // id → {out:[el,fx,fy], in:[el,fx,fy]}
+const accent=r=>{ let best=r[r.length-1],bs=-1;      // el tono más saturado (y no oscuro) de la rampa
+  for(const h of r){const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255),mx=Math.max(...c),mn=Math.min(...c),s=mx?(mx-mn)/mx*mx:0; if(s>bs){bs=s;best=h;}}
+  return best; };
+let meta={};
+async function build(){
+  meta=await fetch('indices.json').then(r=>r.json());
+  const layers={}; await Promise.all(BASE.map(async b=>{layers[b.id]=await loadLayer(b.id);}));
+  // índices
+  const tile=async(def,col)=>{
+    const L=await loadLayer('i_'+def.c.toLowerCase()), s2=new THREE.Scene(), g=layerGroup(L,62); s2.add(g);
+    const sh=shoot(s2,[...corners(0),...corners(62)],1.25), sd=sideCorners(0,sh.proj);
+    const rp=meta[def.c].ramp, ac=accent(rp);
+    const fig=document.createElement('figure'); fig.className='tile'; fig.dataset.c=def.c;
+    fig.innerHTML=`<img alt="${def.n} en picos" width="${sh.cw}" height="${sh.ch}" src="${sh.url}"><figcaption><div class="nm"><b style="color:${ac}">${def.c}</b>${def.n}</div><div class="f">${def.f}</div><div class="d">${def.d}</div><div class="in">${def.in.map(i=>'<span>'+(i[0]==='#'?i.slice(1):BASE.find(b=>b.id===i).n)+'</span>').join('')}</div></figcaption>`;
+    col.appendChild(fig);
+    const im=fig.querySelector('img');
+    anchors['#'+def.c]={in:[im,sd.L[0],sd.L[1]],out:[im,sd.R[0],sd.R[1]],acc:ac,fig};
+    g.traverse(o=>{if(o.geometry)o.geometry.dispose();});
+  };
+  for(const d of IDX) await tile(d,document.getElementById('c2'));
+  for(const d of IDX2) await tile(d,document.getElementById('c3'));
+  // pila de capas base: la separación se ajusta para que la pila mida lo mismo que la columna de índices
+  const n=BASE.length, NH=36, box=document.getElementById('stack'), inv=camera.matrixWorldInverse, v=new THREE.Vector3();
+  const ext=G=>{let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9; for(let k=0;k<n;k++)for(const p of [...corners(k*G),...corners(k*G+NH)]){v.copy(p).applyMatrix4(inv);x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y);} return [x1-x0,y1-y0];};
+  const c2=document.getElementById('c2'), wide=getComputedStyle(c2).flexDirection==='column';
+  let GAP=60;
+  if(wide){ const T=c2.getBoundingClientRect().height/box.getBoundingClientRect().width, [w0,h0]=ext(0), [,h1]=ext(100);
+    GAP=Math.min(240,Math.max(40,(T*w0-h0)/((h1-h0)/100))); }
+  const sc=new THREE.Scene(), pts=[];
+  BASE.forEach((b,k)=>{const y=(n-1-k)*GAP, g=layerGroup(layers[b.id],NH); g.position.y=y; sc.add(g); pts.push(...corners(y),...corners(y+NH));});
+  const shot=shoot(sc,pts,wide?1.3:1.1);
+  const img=new Image(); img.src=shot.url; img.width=shot.cw; img.height=shot.ch; img.alt='Pila de 18 capas base en picos'; box.appendChild(img);
+  BASE.forEach((b,k)=>{
+    const y=(n-1-k)*GAP, s=sideCorners(y,shot.proj);
+    const el=document.createElement('div'); el.className='sl'; el.dataset.id=b.id;
+    el.innerHTML=b.n+'<em>'+String(n-k).padStart(2,'0')+'</em>';
+    el.style.top=(s.L[1]*100)+'%';
+    const ld=document.createElement('i'); ld.className='ld'; ld.dataset.id=b.id; ld.style.top=(s.L[1]*100)+'%'; ld.style.width=`calc(${s.L[0]*100}% + 10px)`; box.appendChild(ld);
+    el._lx=s.L[0]; box.appendChild(el);
+    anchors[b.id]={out:[box,s.R[0],s.R[1]],label:el,acc:null};
+  });
+  sc.traverse(o=>{if(o.geometry)o.geometry.dispose();});
+  document.getElementById('loading').remove();
+  await Promise.all([...document.images].map(i=>i.decode?i.decode().catch(()=>{}):0));
+  wire(); addEventListener('resize',wire); if(window.ResizeObserver)new ResizeObserver(wire).observe(document.getElementById('dia'));
+  hover();
+}
+// ---------- líneas de cruce ----------
+const dia=document.getElementById('dia'), svg=document.getElementById('wires');
+function pt(a){const r=a[0].getBoundingClientRect(), d=dia.getBoundingClientRect(); return [r.left-d.left+a[1]*r.width, r.top-d.top+a[2]*r.height];}
+function wire(){
+  if(getComputedStyle(svg).display==='none')return;
+  let h='';
+  for(const def of [...IDX,...IDX2]){
+    const t=anchors['#'+def.c], [x2,y2]=pt(t.in);
+    def.in.forEach(i=>{
+      const s=anchors[i], [x1,y1]=pt(s.out), dx=Math.max(40,(x2-x1)*.5);
+      h+=`<path data-to="${def.c}" data-from="${i}" d="M${x1.toFixed(1)} ${y1.toFixed(1)} C${(x1+dx).toFixed(1)} ${y1.toFixed(1)} ${(x2-dx).toFixed(1)} ${y2.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${t.acc}"/>`;
+      h+=`<circle data-to="${def.c}" data-from="${i}" cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="2" fill="${t.acc}"/>`;
+    });
+    h+=`<circle data-to="${def.c}" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="2.6" fill="none" stroke="${t.acc}"/>`;
+  }
+  svg.innerHTML=h;
+}
+// ---------- resaltar un cruce ----------
+function hover(){
+  const ups=c=>{const s=new Set([c]);for(const d of [...IDX,...IDX2])if(d.c===c)d.in.forEach(i=>{if(i[0]==='#')ups(i.slice(1)).forEach(x=>s.add(x)); else s.add(i);});return s;};
+  const set=(on)=>{
+    dia.classList.toggle('focus',!!on);
+    svg.querySelectorAll('path,circle').forEach(e=>e.classList.toggle('on',!!on&&(on.has(e.dataset.to)&&(!e.dataset.from||on.has(e.dataset.from.replace('#',''))))));
+    document.querySelectorAll('.sl,.ld').forEach(e=>e.classList.toggle('on',!!on&&on.has(e.dataset.id)));
+    document.querySelectorAll('.tile').forEach(e=>e.classList.toggle('on',!!on&&on.has(e.dataset.c)));
+  };
+  document.querySelectorAll('.tile').forEach(f=>{f.onmouseenter=()=>set(ups(f.dataset.c));f.onmouseleave=()=>set(null);});
+  document.querySelectorAll('.sl').forEach(l=>{
+    const id=l.dataset.id, s=new Set([id]); for(const d of [...IDX,...IDX2])if(d.in.includes(id))s.add(d.c);
+    for(const d of IDX2)if(d.in.some(i=>i[0]==='#'&&s.has(i.slice(1))))s.add(d.c);
+    l.onmouseenter=()=>set(s); l.onmouseleave=()=>set(null);
+  });
+}
+build().catch(e=>{document.getElementById('loading').textContent='No se pudieron cargar las capas';console.error(e);});
+</script>
+</body>
+</html>
